@@ -1,0 +1,40 @@
+stages:
+    - master_deploy
+    - dev_deploy
+cache:
+    paths:
+     - node_modules/
+job1:
+    stage: master_deploy
+    only:
+        - master
+    when: manual
+    tags:
+        - end_master_tag
+    script:
+        - cd /data
+        - if [ ! -d "end" ] ; then 
+        - git clone git@192.168.7.169:mobile/end.git
+        - fi
+        - cd end
+        - git checkout master
+        - git pull
+        - yarn install
+        - pm2 start deploy.json
+        - sudo rsync -azhe ssh /data/end/ pro170:/data/end/
+job2:
+    stage: dev_deploy
+    except:
+        - master
+    tags:
+        - end_dev
+    script:
+        - cd /data
+        - if [ ! -d "end" ] ; then 
+        - git clone git@192.168.7.169:mobile/end.git
+        - fi
+        - cd end
+        - git checkout dev
+        - git pull
+        - yarn install
+        - pm2 start deploy.json

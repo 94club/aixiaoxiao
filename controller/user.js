@@ -16,74 +16,49 @@ class User {
   }
 
   async login (req, res) {
-    let username = req.body.username
-    let password = req.body.password
+    let {nickName} = req.body
     const tokenObj = {
-      username
+      nickName
     }
     try {
-      if (!username) {
+      if (!nickName) {
         throw new Error('用户不能为空')
-      } else if (!password) {
-        throw new Error('密码不能为空')
       }
     } catch (err) {
-      status: 0,
       res.json({
+        status: 0,
         message: err.message
       })
       return
     }
     // 先查一遍看看是否存在
-    let userInfo = await UserModel.findOne({username, password}, {'passowrd': 0, '_id': 0, '__v': 0})
+    let userInfo = await UserModel.findOne({nickName}, {'_id': 0, '__v': 0})
     let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
     if (userInfo) {
       // 用户已存在 去登录
-      redisManager.set(token, username)
+      redisManager.set(token, nickName)
       res.json({
         status: 200,
         message: '登录成功',
         data: {token, userInfo}
       })
       this.addRecord({
-        username,
+        username: nickName,
         createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-        opertionText: userInfo.des + '' + username + '登录成功'
+        opertionText: userInfo.des + '' + nickName + '登录成功'
       })
     } else {
-      let routerArr = [
-        {
-          title: '超级管理员',
-          index: '1',
-          menuItems: [
-            {
-              title: 'record',
-              index: 'record',
-              btns: []
-            },
-            {
-              title: 'member',
-              index: 'member',
-              btns: []
-            },
-            {
-              title: 'page',
-              index: 'page',
-              btns: []
-            }
-          ]
-        }
-      ]
-      if (username === 'admin') {
         let newUser = {
-          username,
-          password,
-          role: 1,
-          des: '超级管理员',
+          nickName: userInfo.nickName,
+          avatarUrl: userInfo.avatarUrl,
+          city: userInfo.city,
+          province: userInfo.province,
+          country: userInfo.country,
+          language: userInfo.language,
+          gender: userInfo.gender,
+          createBy: 0,
           createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-          id: 1,
-          routerArr,
-          createBy: '94club'
+          id: 1
         }
         try {
           UserModel.create(newUser, (err) => {
@@ -93,24 +68,16 @@ class User {
                 message: '注册失败'
               })
             } else {
-              redisManager.set(token, username)
+              redisManager.set(token, nickName)
               res.json({
                 status: 200,
                 message: '注册成功',
-                data: {token, userInfo:
-                  {
-                    username,
-                    role: 1,
-                    createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                    id: 1,
-                    routerArr
-                  }
-                }
+                data: {token}
               })
               this.addRecord({
-                username,
+                username: nickName,
                 createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                opertionText: '超级管理员' + username + '被创建了'
+                opertionText: '用户' + nickName + '被创建了'
               })
             }
           })
@@ -120,12 +87,6 @@ class User {
             message: err.message
           })
         }
-      } else {
-        res.json({
-          status: 0,
-          message: '用戶名或密码不正确，请联系管理员'
-        })
-      }
     }
   }
 

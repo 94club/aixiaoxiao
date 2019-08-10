@@ -4,11 +4,11 @@ import mongoose from 'mongoose'
 import chalk from 'chalk'
 console.log(process.env.NODE_ENV)
 if (process.env.NODE_ENV === 'dev') {
-  mongoose.connect('mongodb://test888:test***888@localhost:27017/test', {
+  mongoose.connect('mongodb://xiaoai:xiaoai2019@localhost:27017/xiaoai', {
     useNewUrlParser: true
   })
 } else {
-  mongoose.connect('mongodb://test888:test***888@localhost:27017/test', {
+  mongoose.connect('mongodb://xiaoai:xiaoai2019@localhost:27017/xiaoai', {
     useNewUrlParser: true
   })
 }

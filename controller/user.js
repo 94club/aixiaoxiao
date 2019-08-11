@@ -1,6 +1,7 @@
 'use strict'
 
 import UserModel from '../models/user'
+import RootModel from '../models/root'
 import RecordModel from '../models/record'
 import dateAndTime from 'date-and-time'
 import constant from '../constant/constant'
@@ -10,6 +11,7 @@ import redisManager from '../config/redis'
 class User {
   constructor () {
     this.login = this.login.bind(this)
+    this.rootLogin = this.rootLogin.bind(this)
     this.getUserInfo = this.getUserInfo.bind(this)
     this.getRecord = this.getRecord.bind(this)
     this.logout = this.logout.bind(this)
@@ -79,6 +81,74 @@ class User {
                 username: nickName,
                 createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
                 opertionText: '用户' + nickName + '被创建了'
+              })
+            }
+          })
+        } catch (err) {
+          res.json({
+            status: 0,
+            message: err.message
+          })
+        }
+    }
+  }
+  async rootLogin (req, res) {
+    let {username, password} = req.body
+    const tokenObj = {
+      username
+    }
+    try {
+      if (!username) {
+        throw new Error('用户不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    // 先查一遍看看是否存在
+    let userInfo = await RootModel.findOne({username}, {'_id': 0, '__v': 0})
+    let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
+    if (userInfo) {
+      // 用户已存在 去登录
+      redisManager.set(token, username)
+      res.json({
+        status: 200,
+        message: '登录成功',
+        data: {token, userInfo}
+      })
+      this.addRecord({
+        username,
+        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+        opertionText: userInfo.des + '' + username + '登录成功'
+      })
+    } else {
+        let newUser = {
+          username,
+          password,
+          createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+          id: 1
+        }
+        try {
+          RootModel.create(newUser, (err) => {
+            if (err) {
+              res.json({
+                status: 0,
+                message: '注册失败'
+              })
+            } else {
+              redisManager.set(token, username)
+              res.json({
+                status: 200,
+                message: '注册成功',
+                data: {token}
+              })
+              this.addRecord({
+                username,
+                createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+                opertionText: '用户' + username + '被创建了'
               })
             }
           })

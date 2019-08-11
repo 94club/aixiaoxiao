@@ -17,6 +17,7 @@ class User {
 
   async login (req, res) {
     let {nickName} = req.body
+    console.log(req.body)
     const tokenObj = {
       nickName
     }

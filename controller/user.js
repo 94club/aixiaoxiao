@@ -18,8 +18,9 @@ class User {
   }
 
   async login (req, res) {
-    let {nickName} = req.body
-    console.log(req.body)
+    let reqInfo = req.body
+    let {nickName} = reqInfo
+    console.log(reqInfo)
     const tokenObj = {
       nickName
     }
@@ -52,13 +53,13 @@ class User {
       })
     } else {
         let newUser = {
-          nickName: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl,
-          city: userInfo.city,
-          province: userInfo.province,
-          country: userInfo.country,
-          language: userInfo.language,
-          gender: userInfo.gender,
+          nickName: reqInfo.nickName,
+          avatarUrl: reqInfo.avatarUrl,
+          city: reqInfo.city,
+          province: reqInfo.province,
+          country: reqInfo.country,
+          language: reqInfo.language,
+          gender: reqInfo.gender,
           createBy: 0,
           createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
           id: 1

@@ -1,6 +1,6 @@
 {
   "apps": [{
-    "name": "end1",
+    "name": "aixiaoxiao",
     "script": "./index.js",
     "cwd": "./",
     "exec_mode": "fork",

@@ -10,8 +10,7 @@ const moodSchema = new Schema({
   imageStrList: Array, // 图片
   videoPath: String, // 录音文件
   id: Number,
-  createdBy: String,
-  showOther: Boolean // 是否对TA可见
+  createdBy: String
 })
 
 const Mood = mongoose.model('Mood', moodSchema)

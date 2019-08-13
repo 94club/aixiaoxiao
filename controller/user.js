@@ -3,6 +3,7 @@
 import UserModel from '../models/user'
 import RootModel from '../models/root'
 import RecordModel from '../models/record'
+import MoodModel from '../models/mood'
 import dateAndTime from 'date-and-time'
 import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
@@ -15,6 +16,8 @@ class User {
     this.getUserInfo = this.getUserInfo.bind(this)
     this.getRecord = this.getRecord.bind(this)
     this.logout = this.logout.bind(this)
+    this.saveMood = this.saveMood.bind(this)
+    this.getMood = this.getMood.bind(this)
   }
 
   async login (req, res) {
@@ -185,6 +188,73 @@ class User {
       data: '退出成功'
     })
     redisManager.remove(req)
+  }
+
+  async saveMood (req, res) {
+    let reqInfo = req.body
+    let moodList = await MoodModel.find({})
+    let {des, imageStrList, videoPath} = reqInfo
+    try {
+      if (!des) {
+        throw new Error('心情不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    let newMood = {
+      des,
+      imageStrList,
+      videoPath,
+      createBy: req.username,
+      createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+      id: moodList.length + 1
+    }
+    try {
+      MoodModel.create(newMood, (err) => {
+        if (err) {
+          res.json({
+            status: 0,
+            message: '添加失败'
+          })
+        } else {
+          redisManager.set(token, nickName)
+          res.json({
+            status: 200,
+            message: '添加成功'
+          })
+          this.addRecord({
+            username: req.username,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + username + '被创建了心愿'
+          })
+        }
+      })
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+    }
+  }
+
+  async getMood (req, res) {
+    let moodList = await MoodModel.find({}, {'_id': 0, '__v': 0})
+    if (moodList) {
+      res.json({
+        status: 200,
+        message: '查询成功',
+        data: moodList
+      })
+    } else {
+      res.json({
+        status: 0,
+        message: '查询失败，请联系管理员'
+      })
+    }
   }
 
   async getRecord (req, res) {

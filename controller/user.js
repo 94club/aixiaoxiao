@@ -221,7 +221,6 @@ class User {
             message: '添加失败'
           })
         } else {
-          redisManager.set(token, nickName)
           res.json({
             status: 200,
             message: '添加成功'

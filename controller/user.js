@@ -228,7 +228,7 @@ class User {
           this.addRecord({
             username: req.username,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + username + '被创建了心愿'
+            opertionText: '用户' + req.username + '被创建了心愿'
           })
         }
       })

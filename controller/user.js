@@ -8,6 +8,7 @@ import dateAndTime from 'date-and-time'
 import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
 import redisManager from '../config/redis'
+const request = require('request')
 
 class User {
   constructor () {
@@ -18,6 +19,15 @@ class User {
     this.logout = this.logout.bind(this)
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
+  }
+
+  async wechatLogin (req, res) {
+    let {code} = req.body
+    request(constant.wechatLoginUrl + code, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log(body) // Show the HTML for the baidu homepage.
+      }
+    })
   }
 
   async login (req, res) {

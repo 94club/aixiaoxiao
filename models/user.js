@@ -8,7 +8,7 @@ const userSchema = new Schema({
   cpName: {
     type: String,
     default: ''
-  },
+  }, // 绑定对象
   cpMoney: {
     type: Number,
     default: 0
@@ -24,6 +24,7 @@ const userSchema = new Schema({
     type: Number,
     default: 1
   },
+  isSignToday: Boolean, // 今天是否签到
   activeNumber: {
     type: Number,
     default: 0

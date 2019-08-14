@@ -26,6 +26,8 @@ class User {
     request(constant.wechatLoginUrl + code, function (error, response, body) {
       if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.
+        // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
+        let userInfo = await UserModel.find({})
       }
     })
   }

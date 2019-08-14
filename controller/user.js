@@ -9,6 +9,7 @@ import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
 import redisManager from '../config/redis'
 const request = require('request')
+const schedule = require('node-schedule');
 
 class User {
   constructor () {
@@ -27,7 +28,61 @@ class User {
       if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
-        let userInfo = await UserModel.find({})
+        let openId = body.openid
+        let userInfo = await UserModel.findOne({openId})
+        // 先查一遍看看是否存在
+        let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
+        if (userInfo) {
+          // 用户已存在 去登录
+          redisManager.set(token, userInfo.nickName)
+          res.json({
+            status: 200,
+            message: '登录成功',
+            data: {token, userInfo}
+          })
+          this.addRecord({
+            username: userInfo.nickName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
+          })
+        } else {
+          let userList = await UserModel.find({})
+          let newUser = {
+            nickName: '幸福' + (userList.length + 1) + '号',
+            avatarUrl: 'public/images/logo.jpg',
+            openId,
+            createBy: 0,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            id: 1
+          }
+          try {
+            UserModel.create(newUser, (err) => {
+              if (err) {
+                res.json({
+                  status: 0,
+                  message: '注册失败'
+                })
+              } else {
+                redisManager.set(token, nickName)
+                res.json({
+                  status: 200,
+                  message: '注册成功',
+                  data: {token}
+                })
+                this.addRecord({
+                  username: newUser.nickName,
+                  createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+                  opertionText: '用户' + newUser.nickName + '被创建了'
+                })
+              }
+            })
+          } catch (err) {
+            res.json({
+              status: 0,
+              message: err.message
+            })
+          }
+        }
       }
     })
   }
@@ -221,7 +276,7 @@ class User {
       des,
       imageStrList,
       videoPath,
-      createBy: req.username,
+      createBy: req.user.username,
       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
       id: moodList.length + 1
     }
@@ -238,9 +293,9 @@ class User {
             message: '添加成功'
           })
           this.addRecord({
-            username: req.username,
+            username: req.user.username,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.username + '被创建了心愿'
+            opertionText: '用户' + req.user.username + '被创建了心愿'
           })
         }
       })
@@ -266,6 +321,55 @@ class User {
         message: '查询失败，请联系管理员'
       })
     }
+  }
+
+  async daySign (req, res) {
+    let nickName = req.user.username
+    let userInfo = await UserModel.findOne({nickName})
+    let gain = 0
+    let lastSignTime = ''
+    if (userInfo.lastSignTime) {
+      lastSignTime = new Date().getTime()
+      let now = lastSignTime - new Date(userInfo.lastSignTime).getTime()
+      if (now < 24 * 60 * 60 * 1000) {
+        userInfo.continueSignTiems++
+        gain = userInfo.continueSignTiems % 7 * 5
+        userInfo.cpMoney+=gain
+      } else {
+        userInfo.continueSignTiems = 1
+      }
+    } else {
+      userInfo.continueSignTiems = 1
+    }
+    userMode.update({nickName}, {$set: {
+      cpMoney: userInfo.cpMoney+=5,
+      isSignToday: true,
+      lastSignTime,
+      continueSignTiems: userInfo.continueSignTiems,
+      activeNumber: userInfo.activeNumber + 1,
+      signTimes: userInfo.signTimes + 1
+    }}, function (error) {
+      if (error) {
+        console.error(error);
+        res.json({
+          status: 0,
+          message: '签到失败，请联系管理员muduo770'
+        })
+      } else {
+        if (gain > 0) {
+          res.json({
+            status: 200,
+            message: '连续签到成功，奖励' + (gain + 5) + '心愿币'
+          })
+        } else {
+
+        }
+        res.json({
+          status: 200,
+          message: '签到成功，奖励5心愿币'
+        })
+      }
+    })
   }
 
   async getRecord (req, res) {

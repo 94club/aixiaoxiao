@@ -7,5 +7,7 @@ router.get('/v1/getRecord', User.getRecord)
 router.post('/v1/logout', User.logout)
 router.post('/v1/saveMood', User.saveMood)
 router.get('/v1/getMood', User.getMood)
+router.post('/v1/daySign', User.daySign)
+router.post('/v1/startSchedule', User.startSchedule)
 
 module.exports = router

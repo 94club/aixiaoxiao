@@ -36,8 +36,10 @@ class User {
             })
           }
           // 先查一遍看看是否存在
-          let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
           if (userInfo) {
+            let token = jsonwebtoken.sign({
+              nickName: userInfo.nickName
+            }, constant.secretKey)
             // 用户已存在 去登录
             redisManager.set(token, userInfo.nickName)
             res.json({

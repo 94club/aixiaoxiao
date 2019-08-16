@@ -36,8 +36,9 @@ class User {
             })
           }
           // 先查一遍看看是否存在
+          let token
           if (userInfo) {
-            let token = jsonwebtoken.sign({
+            token = jsonwebtoken.sign({
               nickName: userInfo.nickName
             }, constant.secretKey)
             // 用户已存在 去登录

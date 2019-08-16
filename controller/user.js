@@ -49,7 +49,7 @@ class User {
               message: '登录成功',
               data: {token, userInfo}
             })
-            self.addRecord({
+            addRecord({
               username: userInfo.nickName,
               createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
               opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
@@ -84,7 +84,7 @@ class User {
                       message: '注册成功',
                       data: {token}
                     })
-                    self.addRecord({
+                    addRecord({
                       username: newUser.nickName,
                       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
                       opertionText: '用户' + newUser.nickName + '被创建了'
@@ -134,7 +134,7 @@ class User {
         message: '登录成功',
         data: {token, userInfo}
       })
-      this.addRecord({
+      addRecord({
         username: nickName,
         createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
         opertionText: userInfo.des + '' + nickName + '登录成功'
@@ -166,7 +166,7 @@ class User {
                 message: '注册成功',
                 data: {token}
               })
-              this.addRecord({
+              addRecord({
                 username: nickName,
                 createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
                 opertionText: '用户' + nickName + '被创建了'
@@ -208,7 +208,7 @@ class User {
         message: '登录成功',
         data: {token, userInfo}
       })
-      this.addRecord({
+      addRecord({
         username,
         createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
         opertionText: userInfo.des + '' + username + '登录成功'
@@ -234,7 +234,7 @@ class User {
                 message: '注册成功',
                 data: {token}
               })
-              this.addRecord({
+              addRecord({
                 username,
                 createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
                 opertionText: '用户' + username + '被创建了'
@@ -251,7 +251,7 @@ class User {
   }
 
   async getUserInfo (req, res) {
-    let userInfo = await UserModel.findOne({username: req.user.username}, {'_id': 0, '__v': 0, 'password': 0})
+    let userInfo = await UserModel.findOne({nickName: req.user.username}, {'_id': 0, '__v': 0, 'password': 0})
     if (userInfo) {
       res.json({
         status: 200,
@@ -324,8 +324,8 @@ class User {
             status: 200,
             message: '添加成功,收获' + gain + '心愿币'
           })
-          this.addCpMoney(nickName, gain)
-          this.addRecord({
+          addCpMoney(nickName, gain)
+          addRecord({
             username: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + nickName + '被创建了心愿，获得了' + gain + '心愿币'
@@ -394,7 +394,7 @@ class User {
             status: 200,
             message: '连续签到成功，奖励' + (gain + 5) + '心愿币'
           })
-          this.addRecord({
+          addRecord({
             username: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + nickName + '连续签到成功，奖励' + (gain + 5) + '心愿币'
@@ -404,7 +404,7 @@ class User {
             status: 200,
             message: '签到成功，奖励5心愿币'
           })
-          this.addRecord({
+          addRecord({
             username: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + nickName + '签到成功，奖励5心愿币'

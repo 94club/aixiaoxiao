@@ -28,6 +28,7 @@ class User {
         console.log(body) // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
         let openId = body.openid
+        let self = this
         UserModel.findOne({openId}, (err, userInfo) =>{
           if (err) {
             res.json({
@@ -35,6 +36,7 @@ class User {
               message: '查找失败'
             })
           }
+          let token
           // 先查一遍看看是否存在
           let token
           if (userInfo) {
@@ -48,7 +50,7 @@ class User {
               message: '登录成功',
               data: {token, userInfo}
             })
-            this.addRecord({
+            self.addRecord({
               username: userInfo.nickName,
               createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
               opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
@@ -83,7 +85,7 @@ class User {
                       message: '注册成功',
                       data: {token}
                     })
-                    this.addRecord({
+                    self.addRecord({
                       username: newUser.nickName,
                       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
                       opertionText: '用户' + newUser.nickName + '被创建了'

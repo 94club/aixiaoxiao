@@ -9,7 +9,6 @@ import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
 import redisManager from '../config/redis'
 const request = require('request')
-const schedule = require('node-schedule');
 
 class User {
   constructor () {
@@ -24,69 +23,84 @@ class User {
 
   async wechatLogin (req, res) {
     let {code} = req.body
-    request(constant.wechatLoginUrl + code, function (error, response, body) {
+    request(constant.wechatLoginUrl + code, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
         let openId = body.openid
-        let userInfo = await UserModel.findOne({openId})
-        // 先查一遍看看是否存在
-        let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
-        if (userInfo) {
-          // 用户已存在 去登录
-          redisManager.set(token, userInfo.nickName)
-          res.json({
-            status: 200,
-            message: '登录成功',
-            data: {token, userInfo}
-          })
-          this.addRecord({
-            username: userInfo.nickName,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
-          })
-        } else {
-          let userList = await UserModel.find({})
-          let newUser = {
-            nickName: '幸福' + (userList.length + 1) + '号',
-            avatarUrl: 'public/images/logo.jpg',
-            openId,
-            createBy: 0,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            id: 1
+        UserModel.findOne({openId}, (err, userInfo) =>{
+          if (err) {
+            res.json({
+              status: 0,
+              message: '查找失败'
+            })
           }
-          try {
-            UserModel.create(newUser, (err) => {
+          // 先查一遍看看是否存在
+          let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
+          if (userInfo) {
+            // 用户已存在 去登录
+            redisManager.set(token, userInfo.nickName)
+            res.json({
+              status: 200,
+              message: '登录成功',
+              data: {token, userInfo}
+            })
+            this.addRecord({
+              username: userInfo.nickName,
+              createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+              opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
+            })
+          } else {
+            UserModel.find({}, (err, docs) => {
               if (err) {
                 res.json({
                   status: 0,
-                  message: '注册失败'
+                  message: '查询失败'
                 })
-              } else {
-                redisManager.set(token, nickName)
+              }
+              let newUser = {
+                nickName: '幸福' + (docs.length + 1) + '号',
+                avatarUrl: 'public/images/logo.jpg',
+                openId,
+                createBy: 0,
+                createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+                id: 1
+              }
+              try {
+                UserModel.create(newUser, (err) => {
+                  if (err) {
+                    res.json({
+                      status: 0,
+                      message: '注册失败'
+                    })
+                  } else {
+                    redisManager.set(token, nickName)
+                    res.json({
+                      status: 200,
+                      message: '注册成功',
+                      data: {token}
+                    })
+                    this.addRecord({
+                      username: newUser.nickName,
+                      createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+                      opertionText: '用户' + newUser.nickName + '被创建了'
+                    })
+                  }
+                })
+              } catch (err) {
                 res.json({
-                  status: 200,
-                  message: '注册成功',
-                  data: {token}
-                })
-                this.addRecord({
-                  username: newUser.nickName,
-                  createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                  opertionText: '用户' + newUser.nickName + '被创建了'
+                  status: 0,
+                  message: err.message
                 })
               }
             })
-          } catch (err) {
-            res.json({
-              status: 0,
-              message: err.message
-            })
           }
-        }
+        })
       }
     })
   }
 
+  
   async login (req, res) {
     let reqInfo = req.body
     let {nickName} = reqInfo
@@ -427,7 +441,7 @@ class User {
     }
   }
 
-  addCpMoney (nickName, gain) {
+  async addCpMoney (nickName, gain) {
     let userInfo = await UserModel.findOne({nickName})
     UserModel.update({nickName}, {$set: {
       cpMoney: userInfo.cpMoney += gain

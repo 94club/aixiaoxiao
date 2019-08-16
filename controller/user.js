@@ -261,6 +261,7 @@ class User {
     let reqInfo = req.body
     let moodList = await MoodModel.find({})
     let {des, imageStrList, videoPath} = reqInfo
+    let nickName = req.user.username
     try {
       if (!des) {
         throw new Error('心情不能为空')
@@ -276,12 +277,25 @@ class User {
       des,
       imageStrList,
       videoPath,
-      createBy: req.user.username,
+      createBy: nickName,
       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
       id: moodList.length + 1
     }
     try {
       MoodModel.create(newMood, (err) => {
+        let gain = 0
+        if (newMood.des.length > 30) {
+          gain += 50
+        } else {
+          gain += 30
+        }
+        if (newMood.videoPath) {
+          gain += 20
+        }
+        let sl = newMood.imageStrList.length
+        if (sl > 0) {
+          gain += (20 * sl)
+        }
         if (err) {
           res.json({
             status: 0,
@@ -290,12 +304,13 @@ class User {
         } else {
           res.json({
             status: 200,
-            message: '添加成功'
+            message: '添加成功,收获' + gain + '心愿币'
           })
+          this.addCpMoney(nickName, gain)
           this.addRecord({
-            username: req.user.username,
+            username: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.username + '被创建了心愿'
+            opertionText: '用户' + nickName + '被创建了心愿，获得了' + gain + '心愿币'
           })
         }
       })
@@ -341,7 +356,7 @@ class User {
     } else {
       userInfo.continueSignTiems = 1
     }
-    userMode.update({nickName}, {$set: {
+    UserModel.update({nickName}, {$set: {
       cpMoney: userInfo.cpMoney+=5,
       isSignToday: true,
       lastSignTime,
@@ -361,13 +376,22 @@ class User {
             status: 200,
             message: '连续签到成功，奖励' + (gain + 5) + '心愿币'
           })
+          this.addRecord({
+            username: nickName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + nickName + '连续签到成功，奖励' + (gain + 5) + '心愿币'
+          })
         } else {
-
+          res.json({
+            status: 200,
+            message: '签到成功，奖励5心愿币'
+          })
+          this.addRecord({
+            username: nickName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + nickName + '签到成功，奖励5心愿币'
+          })
         }
-        res.json({
-          status: 200,
-          message: '签到成功，奖励5心愿币'
-        })
       }
     })
   }
@@ -401,6 +425,19 @@ class User {
     } catch (err) {
       console.log('日志写入catch失败')
     }
+  }
+
+  addCpMoney (nickName, gain) {
+    let userInfo = await UserModel.findOne({nickName})
+    UserModel.update({nickName}, {$set: {
+      cpMoney: userInfo.cpMoney += gain
+    }}, function (error) {
+      if (error) {
+        console.error('更新心愿币失败');
+      } else {
+        console.error('更新心愿币');
+      }
+    })
   }
 }
 

@@ -23,12 +23,14 @@ class User {
 
   async wechatLogin (req, res) {
     let {code} = req.body
+    console.log(this.addRecord())
     request(constant.wechatLoginUrl + code, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
         let openId = body.openid
         let self = this
+        console.log(self.addRecord())
         UserModel.findOne({openId}, (err, userInfo) =>{
           if (err) {
             res.json({
@@ -36,9 +38,10 @@ class User {
               message: '查找失败'
             })
           }
+	  console.log(self)
+	  console.log(self.addRecord())
           let token
           // 先查一遍看看是否存在
-          let token
           if (userInfo) {
             token = jsonwebtoken.sign({
               nickName: userInfo.nickName

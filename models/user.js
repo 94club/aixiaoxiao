@@ -14,12 +14,9 @@ const userSchema = new Schema({
     default: 0
   }, // 心愿币
   nickName: String,
+  openId: String, // 微信唯一标识
   avatarUrl: String,
-  city: String,
-  province: String,
-  country: String,
-  language: String,
-  gender: Number, // 性别 0：未知、1：男、2：女
+  wechat: String, // 微信号
   nameChangeTimes: {
     type: Number,
     default: 1
@@ -36,8 +33,8 @@ const userSchema = new Schema({
   signTimes: {
     type: Number,
     default: 0
-  }, // 签到天数
-  maxSignTiems: {
+  }, // 总共签到天数
+  continueSignTiems: {
     type: Number,
     default: 0
   }, // 连续签到天数

@@ -19,14 +19,17 @@ class User {
     this.logout = this.logout.bind(this)
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
-    this.addRecord = this.addRecord.bind(this)
+    
     this.addCpMoney = this.addCpMoney.bind(this)
   }
 
   async wechatLogin (req, res) {
     let {code} = req.body
+	let self = this
+console.log(this)
     request(constant.wechatLoginUrl + code, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
+	     
+ if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
         let openId = body.openid
@@ -50,7 +53,8 @@ class User {
               message: '登录成功',
               data: {token, userInfo}
             })
-            this.addRecord({
+             console.log(this)
+            addRecord({
               username: userInfo.nickName,
               createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
               opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
@@ -85,7 +89,7 @@ class User {
                       message: '注册成功',
                       data: {token}
                     })
-                    this.addRecord({
+                    self.addRecord({
                       username: newUser.nickName,
                       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
                       opertionText: '用户' + newUser.nickName + '被创建了'

@@ -79,8 +79,9 @@ class User extends base{
                   message: '查询失败'
                 })
               }
+              let name = '幸福' + (docs.length + 1) + '号'
               let newUser = {
-                nickName: '幸福' + (docs.length + 1) + '号',
+                nickName: name,
                 avatarUrl: 'public/images/logo.jpg',
                 openId,
                 createBy: 0,
@@ -95,16 +96,16 @@ class User extends base{
                       message: '注册失败'
                     })
                   } else {
-                    redisManager.set(token, nickName)
+                    redisManager.set(token, name)
                     res.json({
                       status: 200,
                       message: '注册成功',
                       data: {token}
                     })
                     this.addRecord({
-                      username: newUser.nickName,
+                      username: name,
                       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                      opertionText: '用户' + newUser.nickName + '被创建了'
+                      opertionText: '用户' + name + '被创建了'
                     })
                   }
                 })

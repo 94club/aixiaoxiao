@@ -2,7 +2,7 @@
 
 import UserModel from '../models/user'
 import RootModel from '../models/root'
-
+import RecordModel from '../models/record'
 import MoodModel from '../models/mood'
 import dateAndTime from 'date-and-time'
 import constant from '../constant/constant'

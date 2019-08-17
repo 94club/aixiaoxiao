@@ -452,8 +452,8 @@ class User extends base{
       return
     }
     if (nickName) {
-      let userInfo = await UserModel.findOne({nickName})
-      UserModel.updateOne({nickName}, {$set: {
+      let userInfo = await UserModel.findOne({nickName:req.user.nickName})
+      UserModel.updateOne({nickName:req.user.nickName}, {$set: {
         nickName,
         nameChangeTimes: userInfo.nameChangeTimes--
       }}, (error) => {
@@ -478,7 +478,7 @@ class User extends base{
       })
     }
     if (wechat) {
-      UserModel.updateOne({wechat}, {$set: {
+      UserModel.updateOne({nickName:req.user.nickName}, {$set: {
         wechat
       }}, (error) => {
         if (error) {

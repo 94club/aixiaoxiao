@@ -22,6 +22,7 @@ class User extends base{
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
     this.addCpMoney = this.addCpMoney.bind(this)
+    this.updateUserInfo = this.updateUserInfo.bind(this)
   }
 
   async wechatLogin (req, res) {
@@ -437,8 +438,66 @@ class User extends base{
     })
   }
 
- 
-
+  async updateUserInfo (req, res) {
+    let {nickName, wechat} = req.body
+    try {
+      if (!nickName && !wechat) {
+        throw new Error('修改数据不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    if (nickName) {
+      UserModel.update({nickName}, {$set: {
+        nickName
+      }}, function (error) {
+        if (error) {
+          console.error(error);
+          res.json({
+            status: 0,
+            message: '修改失败，请联系管理员muduo770'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '修改成功'
+          })
+          this.addRecord({
+            username: nickName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + nickName + '修改昵称'
+          })
+        }
+      })
+    }
+    if (wechat) {
+      UserModel.update({wechat}, {$set: {
+        wechat
+      }}, function (error) {
+        if (error) {
+          console.error(error);
+          res.json({
+            status: 0,
+            message: '修改失败，请联系管理员muduo770'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '修改成功'
+          })
+          this.addRecord({
+            username: req.user.nickName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + req.user.nickName + '修改微信号'
+          })
+        }
+      })
+    }
+  }
   async addCpMoney (nickName, gain) {
     let userInfo = await UserModel.findOne({nickName})
     UserModel.update({nickName}, {$set: {

@@ -7,7 +7,7 @@ const Schema = mongoose.Schema
 const userSchema = new Schema({
   cpName: {
     type: String,
-    default: ''
+    default: '幸福?号'
   }, // 绑定对象
   cpMoney: {
     type: Number,
@@ -15,8 +15,10 @@ const userSchema = new Schema({
   }, // 心愿币
   nickName: String,
   openId: String, // 微信唯一标识
-  avatarUrl: String,
-  wechat: String, // 微信号
+  wechat: {
+    type: String,
+    default: '???'
+  }, // 微信号
   nameChangeTimes: {
     type: Number,
     default: 1

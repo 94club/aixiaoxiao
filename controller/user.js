@@ -453,7 +453,7 @@ class User extends base{
     }
     if (nickName) {
       let userInfo = await UserModel.findOne({nickName})
-      UserModel.update({nickName}, {$set: {
+      UserModel.updateOne({nickName}, {$set: {
         nickName,
         nameChangeTimes: userInfo.nameChangeTimes--
       }}, (error) => {
@@ -466,7 +466,7 @@ class User extends base{
         } else {
           res.json({
             status: 200,
-            message: '修改成功'
+            message: '昵称修改成功'
           })
 
           this.addRecord({
@@ -478,7 +478,7 @@ class User extends base{
       })
     }
     if (wechat) {
-      UserModel.update({wechat}, {$set: {
+      UserModel.updateOne({wechat}, {$set: {
         wechat
       }}, (error) => {
         if (error) {
@@ -490,7 +490,7 @@ class User extends base{
         } else {
           res.json({
             status: 200,
-            message: '修改成功'
+            message: 'wechat修改成功'
           })
           this.addRecord({
             username: req.user.nickName,

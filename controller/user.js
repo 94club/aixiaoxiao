@@ -405,7 +405,7 @@ class User extends base{
       continueSignTiems: userInfo.continueSignTiems,
       activeNumber: userInfo.activeNumber + 1,
       signTimes: userInfo.signTimes + 1
-    }}, function (error) {
+    }}, (error) => {
       if (error) {
         console.error(error);
         res.json({
@@ -452,9 +452,11 @@ class User extends base{
       return
     }
     if (nickName) {
+      let userInfo = await UserModel.findOne({nickName})
       UserModel.update({nickName}, {$set: {
-        nickName
-      }}, function (error) {
+        nickName,
+        nameChangeTimes: userInfo.nameChangeTimes--
+      }}, (error) => {
         if (error) {
           console.error(error);
           res.json({
@@ -466,6 +468,7 @@ class User extends base{
             status: 200,
             message: '修改成功'
           })
+
           this.addRecord({
             username: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
@@ -477,7 +480,7 @@ class User extends base{
     if (wechat) {
       UserModel.update({wechat}, {$set: {
         wechat
-      }}, function (error) {
+      }}, (error) => {
         if (error) {
           console.error(error);
           res.json({

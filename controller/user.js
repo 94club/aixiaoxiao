@@ -2,16 +2,18 @@
 
 import UserModel from '../models/user'
 import RootModel from '../models/root'
-import RecordModel from '../models/record'
+
 import MoodModel from '../models/mood'
 import dateAndTime from 'date-and-time'
 import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
 import redisManager from '../config/redis'
 const request = require('request')
+import base from './base'
 
-class User {
+class User extends base{
   constructor () {
+    super()
     this.login = this.login.bind(this)
     this.rootLogin = this.rootLogin.bind(this)
     this.getUserInfo = this.getUserInfo.bind(this)
@@ -19,17 +21,13 @@ class User {
     this.logout = this.logout.bind(this)
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
-    
     this.addCpMoney = this.addCpMoney.bind(this)
   }
 
   async wechatLogin (req, res) {
     let {code} = req.body
-	let self = this
-console.log(this)
     request(constant.wechatLoginUrl + code, (error, response, body) => {
-	     
- if (!error && response.statusCode == 200) {
+    if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
         let openId = body.openid
@@ -53,31 +51,31 @@ console.log(this)
               message: '登录成功',
               data: {token, userInfo}
             })
-            // this.addRecord({
-            //   username: userInfo.nickName,
-            //   createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            //   opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
-            // })
-            try {
-              RecordModel.create({
-                username: userInfo.nickName,
-                createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
-              }, (err) => {
-                if (err) {
-                  console.log('日志写入失败')
-                } else {
-                  console.log('日志写入成功')
-                }
-                console.log({
-                  username: userInfo.nickName,
-                  createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                  opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
-                })
-              })
-            } catch (err) {
-              console.log('日志写入catch失败')
-            }
+            this.addRecord({
+              username: userInfo.nickName,
+              createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+              opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
+            })
+            // try {
+            //   RecordModel.create({
+            //     username: userInfo.nickName,
+            //     createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            //     opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
+            //   }, (err) => {
+            //     if (err) {
+            //       console.log('日志写入失败')
+            //     } else {
+            //       console.log('日志写入成功')
+            //     }
+            //     console.log({
+            //       username: userInfo.nickName,
+            //       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            //       opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
+            //     })
+            //   })
+            // } catch (err) {
+            //   console.log('日志写入catch失败')
+            // }
           } else {
             UserModel.find({}, (err, docs) => {
               if (err) {
@@ -438,36 +436,7 @@ console.log(this)
     })
   }
 
-  async getRecord (req, res) {
-    let recordInfo = await RecordModel.find({}, { '_id': 0, '__v': 0}).sort({_id: -1})
-    if (recordInfo) {
-      res.json({
-        status: 200,
-        message: '查询记录成功',
-        data: recordInfo
-      })
-    } else {
-      res.json({
-        status: 0,
-        message: '用户记录失败，请联系管理员'
-      })
-    }
-  }
-  
-  addRecord (recordText) {
-    try {
-      RecordModel.create(recordText, (err) => {
-        if (err) {
-          console.log('日志写入失败')
-        } else {
-          console.log('日志写入成功')
-        }
-        console.log(recordText)
-      })
-    } catch (err) {
-      console.log('日志写入catch失败')
-    }
-  }
+ 
 
   async addCpMoney (nickName, gain) {
     let userInfo = await UserModel.findOne({nickName})

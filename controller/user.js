@@ -51,31 +51,26 @@ class User extends base{
               message: '登录成功',
               data: {token, userInfo}
             })
-            this.addRecord({
-              username: userInfo.nickName,
-              createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-              opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
-            })
-            // try {
-            //   RecordModel.create({
-            //     username: userInfo.nickName,
-            //     createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            //     opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
-            //   }, (err) => {
-            //     if (err) {
-            //       console.log('日志写入失败')
-            //     } else {
-            //       console.log('日志写入成功')
-            //     }
-            //     console.log({
-            //       username: userInfo.nickName,
-            //       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            //       opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
-            //     })
-            //   })
-            // } catch (err) {
-            //   console.log('日志写入catch失败')
-            // }
+            try {
+              RecordModel.create({
+                username: userInfo.nickName,
+                createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+                opertionText: userInfo.nickName + '登录成功'
+              }, (err) => {
+                if (err) {
+                  console.log('日志写入失败')
+                } else {
+                  console.log('日志写入成功')
+                }
+                console.log({
+                  username: userInfo.nickName,
+                  createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+                  opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
+                })
+              })
+            } catch (err) {
+              console.log('日志写入catch失败')
+            }
           } else {
             UserModel.find({}, (err, docs) => {
               if (err) {
@@ -106,7 +101,7 @@ class User extends base{
                       message: '注册成功',
                       data: {token}
                     })
-                    self.addRecord({
+                    this.addRecord({
                       username: newUser.nickName,
                       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
                       opertionText: '用户' + newUser.nickName + '被创建了'
@@ -279,6 +274,11 @@ class User extends base{
         status: 200,
         message: '查询成功',
         data: userInfo
+      })
+      this.addRecord({
+        username: userInfo.nickName,
+        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+        opertionText: userInfo.nickName + '查询信息成功'
       })
     } else {
       res.json({

@@ -268,7 +268,7 @@ class User extends base{
   }
 
   async getUserInfo (req, res) {
-    let userInfo = await UserModel.findOne({nickName: req.user.username}, {'_id': 0, '__v': 0, 'password': 0})
+    let userInfo = await UserModel.findOne({nickName: req.user.nickName}, {'_id': 0, '__v': 0, 'password': 0})
     if (userInfo) {
       res.json({
         status: 200,
@@ -301,7 +301,7 @@ class User extends base{
     let reqInfo = req.body
     let moodList = await MoodModel.find({})
     let {des, imageStrList, videoPath} = reqInfo
-    let nickName = req.user.username
+    let nickName = req.user.nickName
     try {
       if (!des) {
         throw new Error('心情不能为空')
@@ -379,7 +379,7 @@ class User extends base{
   }
 
   async daySign (req, res) {
-    let nickName = req.user.username
+    let nickName = req.user.nickName
     let userInfo = await UserModel.findOne({nickName})
     let gain = 0
     let lastSignTime = ''

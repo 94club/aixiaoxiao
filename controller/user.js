@@ -21,7 +21,6 @@ class User extends base{
     this.logout = this.logout.bind(this)
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
-    this.addCpMoney = this.addCpMoney.bind(this)
     this.updateUserInfo = this.updateUserInfo.bind(this)
   }
 
@@ -299,6 +298,10 @@ class User extends base{
     redisManager.remove(req)
   }
 
+  async saveYuan (req, res) {}
+
+  async getYuan (req, res) {}
+  
   async saveMood (req, res) {
     let reqInfo = req.body
     let moodList = await MoodModel.find({})
@@ -349,10 +352,11 @@ class User extends base{
             message: '添加成功,收获' + gain + '心愿币'
           })
           this.addCpMoney(nickName, gain)
+          this.addActiveNumber(nickName, 1)
           this.addRecord({
             username: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + nickName + '被创建了心愿，获得了' + gain + '心愿币'
+            opertionText: '用户' + nickName + '创建了心愿'
           })
         }
       })
@@ -391,7 +395,7 @@ class User extends base{
       if (now < 24 * 60 * 60 * 1000) {
         userInfo.continueSignTiems++
         gain = userInfo.continueSignTiems % 7 * 5
-        userInfo.cpMoney+=gain
+        userInfo.cpMoney += gain
       } else {
         userInfo.continueSignTiems = 1
       }
@@ -399,7 +403,7 @@ class User extends base{
       userInfo.continueSignTiems = 1
     }
     UserModel.update({nickName}, {$set: {
-      cpMoney: userInfo.cpMoney+=5,
+      cpMoney: userInfo.cpMoney += 5,
       isSignToday: true,
       lastSignTime,
       continueSignTiems: userInfo.continueSignTiems,
@@ -418,30 +422,33 @@ class User extends base{
             status: 200,
             message: '连续签到成功，奖励' + (gain + 5) + '心愿币'
           })
+          this.addCpMoney(nickName, gain + 5)
           this.addRecord({
             username: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + nickName + '连续签到成功，奖励' + (gain + 5) + '心愿币'
+            opertionText: '用户' + nickName + '连续签到成功'
           })
         } else {
           res.json({
             status: 200,
             message: '签到成功，奖励5心愿币'
           })
+          this.addCpMoney(nickName, gain)
           this.addRecord({
             username: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + nickName + '签到成功，奖励5心愿币'
+            opertionText: '用户' + nickName + '签到成功'
           })
         }
+        this.addActiveNumber(nickName, userInfo.continueSignTiems)
       }
     })
   }
 
   async updateUserInfo (req, res) {
-    let {nickName, wechat} = req.body
+    let {nickName, wechat, cpName} = req.body
     try {
-      if (!nickName && !wechat) {
+      if (!nickName && !wechat && !cpName) {
         throw new Error('修改数据不能为空')
       }
     } catch (err) {
@@ -452,7 +459,7 @@ class User extends base{
       return
     }
     if (nickName) {
-      let userInfo = await UserModel.findOne({nickName:req.user.nickName})
+      let userInfo = await UserModel.findOne({nickName: req.user.nickName})
       UserModel.updateOne({nickName:req.user.nickName}, {$set: {
         nickName,
         nameChangeTimes: userInfo.nameChangeTimes--
@@ -470,15 +477,41 @@ class User extends base{
           })
 
           this.addRecord({
-            username: nickName,
+            username: req.user.nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + nickName + '修改昵称'
+            opertionText: '用户' + req.user.nickName + '修改昵称-->' + nickName
+          })
+        }
+      })
+    }
+    if (cpName) {
+      let userInfo = await UserModel.findOne({nickName: req.user.nickName})
+      UserModel.updateOne({nickName:req.user.nickName}, {$set: {
+        cpName: userInfo.cpName
+      }}, (error) => {
+        if (error) {
+          console.error(error);
+          res.json({
+            status: 0,
+            message: '绑定失败，请联系管理员muduo770'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '绑定搭档成功，奖励50心愿币'
+          })
+          this.addCpMoney(req.user.nickName, 50)
+          this.addActiveNumber(req.user.nickName, 5)
+          this.addRecord({
+            username: req.user.nickName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + req.user.nickName + '绑定搭档昵称' + cpName
           })
         }
       })
     }
     if (wechat) {
-      UserModel.updateOne({nickName:req.user.nickName}, {$set: {
+      UserModel.updateOne({nickName: req.user.nickName}, {$set: {
         wechat
       }}, (error) => {
         if (error) {
@@ -495,24 +528,13 @@ class User extends base{
           this.addRecord({
             username: req.user.nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.nickName + '修改微信号'
+            opertionText: '用户' + req.user.nickName + '修改微信号-->' + wechat
           })
         }
       })
     }
   }
-  async addCpMoney (nickName, gain) {
-    let userInfo = await UserModel.findOne({nickName})
-    UserModel.update({nickName}, {$set: {
-      cpMoney: userInfo.cpMoney += gain
-    }}, function (error) {
-      if (error) {
-        console.error('更新心愿币失败');
-      } else {
-        console.error('更新心愿币');
-      }
-    })
-  }
+  
 }
 
 export default new User()

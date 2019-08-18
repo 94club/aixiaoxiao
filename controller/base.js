@@ -1,7 +1,11 @@
 import RecordModel from '../models/record'
+import UserModel from '../models/user'
 export default class Base {
   constructor () {
     this.addRecord = this.addRecord.bind(this)
+    this.getRecord = this.getRecord.bind(this)
+    this.addCpMoney = this.addCpMoney.bind(this)
+    this.addActiveNumber = this.addActiveNumber.bind(this)
   }
 
   async getRecord (req, res) {
@@ -19,7 +23,38 @@ export default class Base {
       })
     }
   }
-  
+  async addCpMoney (nickName, gain) {
+    let userInfo = await UserModel.findOne({nickName})
+    UserModel.update({nickName}, {$set: {
+      cpMoney: userInfo.cpMoney += gain
+    }}, function (error) {
+      if (error) {
+        console.error('更新心愿币失败');
+      } else {
+        this.addRecord({
+          username: nickName,
+          createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+          opertionText: '用户' + nickName + '增加' + gain + '心愿币'
+        })
+      }
+    })
+  }
+  async addActiveNumber (nickName, gain) {
+    let userInfo = await UserModel.findOne({nickName})
+    UserModel.update({nickName}, {$set: {
+      activeNumber: userInfo.activeNumber += gain
+    }}, function (error) {
+      if (error) {
+        console.error('更新活跃度失败');
+      } else {
+        this.addRecord({
+          username: nickName,
+          createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+          opertionText: '用户' + nickName + '增加' + gain + '活跃度'
+        })
+      }
+    })
+  }
   addRecord (recordText) {
     try {
       RecordModel.create(recordText, (err) => {

@@ -6,7 +6,7 @@ const Schema = mongoose.Schema
 
 const yuanSchema = new Schema({
   id: Number,
-  status: Number, // 1审核中 2 进行中 3结束 4 重开5 关闭
+  status: Number, // 1审核中 2待领取 3 进行中 4结束 5 关闭
   title: String, // 心愿标题
   des: String, // 心愿描述
   createdBy: String, // 创建人
@@ -14,7 +14,11 @@ const yuanSchema = new Schema({
   createdTime: String, // 创建时间
   finishedTime: String, // 完成时间
   reopenTime: String, // 重开时间
-  type: String, // 0心愿任务 1 双人任务 2特殊任务
+  type: String, // 0 心愿任务 1 双人任务
+  progress: {
+    type: Number,
+    default: 0 // 双人进度 默认0 1 完成1人 2 完成2人
+  },
   amount: String, //任务心愿币
   daojuId: {
     type: Number,

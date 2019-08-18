@@ -14,6 +14,7 @@ const userSchema = new Schema({
     default: 0
   }, // 心愿币
   nickName: String,
+  tokenName: String, // 因为nickName可以被修改，所以用一个tokenName
   openId: String, // 微信唯一标识
   wechat: {
     type: String,

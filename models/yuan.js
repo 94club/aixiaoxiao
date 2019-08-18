@@ -10,10 +10,12 @@ const yuanSchema = new Schema({
   title: String, // 心愿标题
   des: String, // 心愿描述
   createdBy: String, // 创建人
-  accectedBy: String, // 执行人
+  accectedBy: {
+    type: String,
+    default: ''
+  }, // 执行人
   createdTime: String, // 创建时间
   finishedTime: String, // 完成时间
-  reopenTime: String, // 重开时间
   type: String, // 0 心愿任务 1 双人任务
   progress: {
     type: Number,

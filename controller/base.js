@@ -1,10 +1,13 @@
 import RecordModel from '../models/record'
 import UserModel from '../models/user'
+import DaojuModel from '../models/daoju'
+import dateAndTime from 'date-and-time'
 export default class Base {
   constructor () {
     this.addRecord = this.addRecord.bind(this)
     this.getRecord = this.getRecord.bind(this)
     this.addCpMoney = this.addCpMoney.bind(this)
+    this.useDaoju = this.useDaoju.bind(this)
     this.addActiveNumber = this.addActiveNumber.bind(this)
   }
 
@@ -23,6 +26,27 @@ export default class Base {
       })
     }
   }
+  useDaoju (id, nickName) {
+    try {
+      DaojuModel.updateOne({id}, {$set: {
+        isUsed: true,
+        useTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+      }}, (err) => {
+        if (err) {
+          console.log('日志写入失败')
+        } else {
+          this.addRecord({
+            username: nickName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + nickName + '使用了道具卡' + id
+          })
+        }
+      })
+    } catch (error) {
+      
+    }
+  }
+
   async addCpMoney (nickName, gain) {
     let userInfo = await UserModel.findOne({nickName})
     UserModel.update({nickName}, {$set: {

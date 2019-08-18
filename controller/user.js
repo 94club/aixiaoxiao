@@ -4,6 +4,7 @@ import UserModel from '../models/user'
 import RootModel from '../models/root'
 import RecordModel from '../models/record'
 import MoodModel from '../models/mood'
+import DaojuModel from '../models/daoju'
 import dateAndTime from 'date-and-time'
 import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
@@ -42,10 +43,10 @@ class User extends base{
           // 先查一遍看看是否存在
           if (userInfo) {
             token = jsonwebtoken.sign({
-              nickName: userInfo.nickName
+              tokenName: userInfo.tokenName
             }, constant.secretKey)
             // 用户已存在 去登录
-            redisManager.set(token, userInfo.nickName)
+            redisManager.set(token, userInfo.tokenName)
             res.json({
               status: 200,
               message: '登录成功',
@@ -62,11 +63,6 @@ class User extends base{
                 } else {
                   console.log('日志写入成功')
                 }
-                console.log({
-                  username: userInfo.nickName,
-                  createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                  opertionText: userInfo.des + '' + userInfo.nickName + '登录成功'
-                })
               })
             } catch (err) {
               console.log('日志写入catch失败')
@@ -82,11 +78,11 @@ class User extends base{
               let name = '幸福' + (docs.length + 1) + '号'
               let newUser = {
                 nickName: name,
-                avatarUrl: 'public/images/logo.jpg',
                 openId,
                 createBy: 0,
                 createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                id: 1
+                id: 1,
+                tokenName: name
               }
               try {
                 UserModel.create(newUser, (err) => {
@@ -122,7 +118,6 @@ class User extends base{
     })
   }
 
-  
   async login (req, res) {
     let reqInfo = req.body
     let {nickName} = reqInfo
@@ -269,7 +264,7 @@ class User extends base{
   }
 
   async getUserInfo (req, res) {
-    let userInfo = await UserModel.findOne({nickName: req.user.nickName}, {'_id': 0, '__v': 0, 'password': 0})
+    let userInfo = await UserModel.findOne({tokenName: req.user.tokenName}, {'_id': 0, '__v': 0, 'password': 0})
     if (userInfo) {
       res.json({
         status: 200,
@@ -277,9 +272,9 @@ class User extends base{
         data: userInfo
       })
       this.addRecord({
-        username: userInfo.nickName,
+        username: userInfo.tokenName,
         createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-        opertionText: userInfo.nickName + '查询信息成功'
+        opertionText: userInfo.tokenName + '查询信息成功'
       })
     } else {
       res.json({
@@ -298,15 +293,169 @@ class User extends base{
     redisManager.remove(req)
   }
 
-  async saveYuan (req, res) {}
+  async saveYuan (req, res) {
+    let {type, des, title, amount} = req.body
+    try {
+      if (!type) {
+        throw new Error('类型不能为空')
+      } else if (!title) {
+        throw new Error('标题不能为空')
+      } else if (!amount) {
+        throw new Error('心愿币不能为空')
+      } else if (!des) {
+        throw new Error('描述不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    let operationText = []
+    let userInfo = await UserModel.findOne({tokenName: req.user.tokenName})
+    let status = 1
+    operationText.push({text: '任务正在审核中', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
+    if (userInfo.activeNumber > 50) {
+      status = 3
+      operationText.push({text: '任务自动审核通过', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
+    }
+    let yuanList = await YuanModel.find({})
+    let newYuan = {
+      type,
+      des,
+      title,
+      amount,
+      status,
+      createdBy: name,
+      id: yuanList.length + 1
+    }
+    try {
+      YuanModel.create(newYuan, (err) => {
+        if (err) {
+          res.json({
+            status: 0,
+            message: '申请失败'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '申请成功'
+          })
+          this.addCpMoney(userInfo.tokenName, 50)
+          this.addActiveNumber(userInfo.tokenName, 1)
+          this.addRecord({
+            username: userInfo.tokenName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + userInfo.tokenName + '申请了一个心愿'
+          })
+        }
+      })
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+    }
+  }
 
+  async updateYuan (req, res) {
+    let {status, daojuId, id, amount, createdBy, accectedBy, operationText} = req.body
+    try {
+      if (!status) {
+        throw new Error('状态不能为空')
+      } else if (!id) {
+        throw new Error('id不能为空')
+      } else if (!amount) {
+        throw new Error('心愿币不能为空')
+      } else if (!createdBy) {
+        throw new Error('创建人不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    try {
+      let daojuInfo = ''
+      let temp = ''
+      if (daojuId) {
+        daojuInfo = await DaojuModel.findOne({id: daojuId})
+      }
+      switch (status){
+        case 2:
+            operationText.push({text: '任务审核通过,待领取', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
+          break;
+        case 3:
+            if (daojuId) {
+              operationText.push({text: accectedBy + '使用了道具卡' + daojuInfo.des, time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
+            } else {
+              operationText.push({text: '任务被' + accectedBy + '领取，正在进行中', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
+            }
+          break;
+        case 4:
+            operationText.push({text: createdBy + '结束了任务', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
+          break;
+        case 5:
+            operationText.push({text: '系统关闭了任务', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
+          break;
+        default:
+          break;
+      }
+      if (daojuId === 1) {
+        amount *= 0.5
+      }
+      if (daojuId === 2) {
+        amount *= 2
+      }
+      if (daojuId === 4 && status === 3) {
+        temp = accectedBy
+        accectedBy = createdBy
+        createdBy = temp
+      }
+      YuanModel.updateOne({id}, {$set: {
+        amount,
+        daojuId,
+        status,
+        createBy,
+        accectedBy
+      }}, (err) => {
+        if (err) {
+          res.json({
+            status: 0,
+            message: '更新失败'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '更新成功'
+          })
+          if (daojuId) {
+            this.useDaoju(daojuId, req.user.tokenName)
+          }
+          this.addRecord({
+            username: req.user.tokenName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + req.user.tokenName + '更新了心愿'
+          })
+        }
+      })
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+    }
+  }
   async getYuan (req, res) {}
   
   async saveMood (req, res) {
     let reqInfo = req.body
     let moodList = await MoodModel.find({})
     let {des, imageStrList, videoPath} = reqInfo
-    let nickName = req.user.nickName
+    let tokenName = req.user.tokenName
     try {
       if (!des) {
         throw new Error('心情不能为空')
@@ -322,7 +471,7 @@ class User extends base{
       des,
       imageStrList,
       videoPath,
-      createBy: nickName,
+      createBy: tokenName,
       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
       id: moodList.length + 1
     }
@@ -351,12 +500,12 @@ class User extends base{
             status: 200,
             message: '添加成功,收获' + gain + '心愿币'
           })
-          this.addCpMoney(nickName, gain)
-          this.addActiveNumber(nickName, 1)
+          this.addCpMoney(tokenName, gain)
+          this.addActiveNumber(tokenName, 1)
           this.addRecord({
-            username: nickName,
+            username: tokenName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + nickName + '创建了心愿'
+            opertionText: '用户' + tokenName + '创建了心愿'
           })
         }
       })
@@ -385,8 +534,8 @@ class User extends base{
   }
 
   async daySign (req, res) {
-    let nickName = req.user.nickName
-    let userInfo = await UserModel.findOne({nickName})
+    let tokenName = req.user.tokenName
+    let userInfo = await UserModel.findOne({tokenName})
     let gain = 0
     let lastSignTime = ''
     if (userInfo.lastSignTime) {
@@ -402,7 +551,7 @@ class User extends base{
     } else {
       userInfo.continueSignTiems = 1
     }
-    UserModel.update({nickName}, {$set: {
+    UserModel.update({tokenName}, {$set: {
       cpMoney: userInfo.cpMoney += 5,
       isSignToday: true,
       lastSignTime,
@@ -422,11 +571,11 @@ class User extends base{
             status: 200,
             message: '连续签到成功，奖励' + (gain + 5) + '心愿币'
           })
-          this.addCpMoney(nickName, gain + 5)
+          this.addCpMoney(tokenName, gain + 5)
           this.addRecord({
-            username: nickName,
+            username: tokenName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + nickName + '连续签到成功'
+            opertionText: '用户' + tokenName + '连续签到成功'
           })
         } else {
           res.json({
@@ -440,7 +589,7 @@ class User extends base{
             opertionText: '用户' + nickName + '签到成功'
           })
         }
-        this.addActiveNumber(nickName, userInfo.continueSignTiems)
+        this.addActiveNumber(tokenName, userInfo.continueSignTiems)
       }
     })
   }
@@ -459,8 +608,8 @@ class User extends base{
       return
     }
     if (nickName) {
-      let userInfo = await UserModel.findOne({nickName: req.user.nickName})
-      UserModel.updateOne({nickName:req.user.nickName}, {$set: {
+      let userInfo = await UserModel.findOne({tokenName:  req.user.tokenName})
+      UserModel.updateOne({tokenName: req.user.tokenName}, {$set: {
         nickName,
         nameChangeTimes: userInfo.nameChangeTimes--
       }}, (error) => {
@@ -477,16 +626,16 @@ class User extends base{
           })
 
           this.addRecord({
-            username: req.user.nickName,
+            username: req.user.tokenName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.nickName + '修改昵称-->' + nickName
+            opertionText: '用户' + req.user.tokenName + '修改昵称-->' + nickName
           })
         }
       })
     }
     if (cpName) {
-      let userInfo = await UserModel.findOne({nickName: req.user.nickName})
-      UserModel.updateOne({nickName:req.user.nickName}, {$set: {
+      let userInfo = await UserModel.findOne({tokenName:  req.user.tokenName})
+      UserModel.updateOne({tokenName: req.user.tokenName}, {$set: {
         cpName: userInfo.cpName
       }}, (error) => {
         if (error) {
@@ -500,18 +649,18 @@ class User extends base{
             status: 200,
             message: '绑定搭档成功，奖励50心愿币'
           })
-          this.addCpMoney(req.user.nickName, 50)
-          this.addActiveNumber(req.user.nickName, 5)
+          this.addCpMoney(req.user.tokenName, 50)
+          this.addActiveNumber(req.user.tokenName, 5)
           this.addRecord({
-            username: req.user.nickName,
+            username: req.user.tokenName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.nickName + '绑定搭档昵称' + cpName
+            opertionText: '用户' + req.user.tokenName + '绑定搭档昵称' + cpName
           })
         }
       })
     }
     if (wechat) {
-      UserModel.updateOne({nickName: req.user.nickName}, {$set: {
+      UserModel.updateOne({tokenName: req.user.tokenName}, {$set: {
         wechat
       }}, (error) => {
         if (error) {
@@ -526,9 +675,9 @@ class User extends base{
             message: 'wechat修改成功'
           })
           this.addRecord({
-            username: req.user.nickName,
+            username: req.user.tokenName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.nickName + '修改微信号-->' + wechat
+            opertionText: '用户' + req.user.tokenName + '修改微信号-->' + wechat
           })
         }
       })

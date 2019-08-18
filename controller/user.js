@@ -101,11 +101,21 @@ class User extends base{
                       message: '注册成功',
                       data: {token}
                     })
-                    this.addRecord({
-                      username: name,
-                      createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                      opertionText: '用户' + name + '被创建了'
-                    })
+                    try {
+                      RecordModel.create({
+                        username: name,
+                        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+                        opertionText: '用户' + name + '被创建了'
+                      }, (err) => {
+                        if (err) {
+                          console.log('日志写入失败')
+                        } else {
+                          console.log('日志写入成功')
+                        }
+                      })
+                    } catch (err) {
+                      console.log('日志写入catch失败')
+                    }
                   }
                 })
               } catch (err) {

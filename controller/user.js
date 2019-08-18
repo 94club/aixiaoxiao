@@ -92,6 +92,9 @@ class User extends base{
                       message: '注册失败'
                     })
                   } else {
+                    token = jsonwebtoken.sign({
+                      tokenName: name
+                    }, constant.secretKey)
                     redisManager.set(token, name)
                     res.json({
                       status: 200,
@@ -279,7 +282,7 @@ class User extends base{
     } else {
       res.json({
         status: 0,
-        message: '用户查询失败，请联系管理员'
+        message: '用户查询失败'
       })
     }
   }

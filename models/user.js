@@ -18,7 +18,7 @@ const userSchema = new Schema({
   openId: String, // 微信唯一标识
   wechat: {
     type: String,
-    default: '???'
+    default: ''
   }, // 微信号
   nameChangeTimes: {
     type: Number,

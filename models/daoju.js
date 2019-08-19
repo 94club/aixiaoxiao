@@ -5,8 +5,7 @@ import mongoose from 'mongoose'
 const Schema = mongoose.Schema
 
 const daojuSchema = new Schema({
-  createTime: String,
-  useTime: String,
+  createTime: String, // 创建时间
   isUsed: {
     type: Boolean,
     default: false
@@ -14,6 +13,7 @@ const daojuSchema = new Schema({
   type: Number, // 1心愿币修改卡0.5倍 2心愿币修改卡2倍 3昵称修改卡 4 心愿换位卡
   des: String,
   id: Number,
+  amount: Number, // 数量
   ownerID: Number // 0代表系统
 })
 

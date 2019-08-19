@@ -19,3 +19,16 @@
 post新增 put 更新 delete 删除 get 获取
 db.createUser({user:"admin888",pwd:"admin***888",roles:[{role:"userAdminAnyDatabase",db:"admin"}]})
 db.createUser({user:"test888",pwd:"test***888",roles:[{role:"readWrite",db:"test"}]})
+升序 sort({_id: 1}) {_id: -1}
+
+后台的功能   
+1 加心愿币
+2 审核心愿
+3 发公告
+4 发活动
+5 日志
+6 用户信息
+7 创建道具  修改道具（数量）
+8 每日签到定时器
+
+

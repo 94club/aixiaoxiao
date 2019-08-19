@@ -10,9 +10,9 @@ import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
 import redisManager from '../config/redis'
 const request = require('request')
-import base from './base'
+import Base from './base'
 
-class User extends base{
+class User extends Base{
   constructor () {
     super()
     this.login = this.login.bind(this)
@@ -23,6 +23,10 @@ class User extends base{
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
     this.updateUserInfo = this.updateUserInfo.bind(this)
+    this.buyDaoju = this.buyDaoju.bind(this)
+    this.saveYuan = this.saveYuan.bind(this)
+    this.updateYuan = this.updateYuan.bind(this)
+    this.getYuan = this.getYuan.bind(this)
   }
 
   async wechatLogin (req, res) {
@@ -462,7 +466,21 @@ class User extends base{
       })
     }
   }
-  async getYuan (req, res) {}
+
+  async buyDaoju (req, res) {
+    // 查一遍道具的数量
+  }
+
+  async getYuan (req, res) {
+    console.log(req.query)
+    let {type} = req.query
+    let yuanList = await YuanModel.find({type}).sort({_id: -1})
+    res.json({
+      status: 200,
+      message: '查询成功',
+      data: yuanList
+    })
+  }
   
   async saveMood (req, res) {
     let reqInfo = req.body

@@ -51,7 +51,7 @@ class User extends Base{
             }, constant.secretKey)
             // 用户已存在 去登录
             redisManager.set(token, userInfo.tokenName)
-            res.json({
+            res.send({
               status: 200,
               message: '登录成功',
               data: {token, userInfo}

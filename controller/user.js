@@ -43,6 +43,7 @@ class User extends Base{
               message: '查找失败'
             })
           }
+          console.log(res)
           let token
           // 先查一遍看看是否存在
           if (userInfo) {
@@ -51,7 +52,7 @@ class User extends Base{
             }, constant.secretKey)
             // 用户已存在 去登录
             redisManager.set(token, userInfo.tokenName)
-            res.send({
+            res.json({
               status: 200,
               message: '登录成功',
               data: {token, userInfo}

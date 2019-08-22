@@ -2,6 +2,8 @@ import RecordModel from '../models/record'
 import UserModel from '../models/user'
 import DaojuModel from '../models/daoju'
 import dateAndTime from 'date-and-time'
+
+
 export default class Base {
   constructor () {
     this.addRecord = this.addRecord.bind(this)
@@ -63,6 +65,7 @@ export default class Base {
       }
     })
   }
+
   async addActiveNumber (nickName, gain) {
     let userInfo = await UserModel.findOne({nickName})
     UserModel.update({nickName}, {$set: {
@@ -79,6 +82,7 @@ export default class Base {
       }
     })
   }
+
   addRecord (recordText) {
     try {
       RecordModel.create(recordText, (err) => {
@@ -93,4 +97,5 @@ export default class Base {
       console.log('日志写入catch失败')
     }
   }
+
 }

@@ -12,6 +12,7 @@ import jsonwebtoken from 'jsonwebtoken'
 import redisManager from '../config/redis'
 const request = require('request')
 const node_xlsx = require('node-xlsx')
+const folderPath = new Date().getFullYear() + "" + (new Date().getMonth()+1) + "" + new Date().getDate()
 import Base from './base'
 
 class User extends Base{
@@ -724,7 +725,8 @@ class User extends Base{
   videoUpload (req, res) {
     console.log(req.file)
     res.json({
-      status: 2000
+      status: 200,
+      data: '/uploads/' + folderPath + '/' + req.file.filename
     })
   }
   excelUpload (req, res) {

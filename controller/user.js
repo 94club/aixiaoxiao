@@ -4,15 +4,12 @@ import UserModel from '../models/user'
 import RootModel from '../models/root'
 import RecordModel from '../models/record'
 import MoodModel from '../models/mood'
-import StudentModel from '../models/student'
 import DaojuModel from '../models/daoju'
 import dateAndTime from 'date-and-time'
 import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
 import redisManager from '../config/redis'
 const request = require('request')
-const node_xlsx = require('node-xlsx')
-const folderPath = new Date().getFullYear() + "" + (new Date().getMonth()+1) + "" + new Date().getDate()
 import Base from './base'
 
 class User extends Base{
@@ -30,9 +27,6 @@ class User extends Base{
     this.saveYuan = this.saveYuan.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
-    this.videoUpload = this.videoUpload.bind(this)
-    this.excelUpload = this.excelUpload.bind(this)
-    this.getExcel = this.getExcel.bind(this)
   }
 
   async wechatLogin (req, res) {
@@ -720,58 +714,6 @@ class User extends Base{
         }
       })
     }
-  }
-
-  videoUpload (req, res) {
-    console.log(req.file)
-    res.json({
-      status: 200,
-      data: '/uploads/' + folderPath + '/' + req.file.filename
-    })
-  }
-  excelUpload (req, res) {
-    console.log(req.file)
-    let obj = node_xlsx.parse(req.file.path);
-    let excelObj = obj[0].data;//取得第一个excel表的数据
-    //循环遍历表每一行的数据
-    let tempArr = []
-    for(let i = 1; i < excelObj.length; i++){
-      if (excelObj[i].length === 0) {
-        break
-      } 
-      let tempObj = {
-        num: '',
-        time: '',
-        phone: '',
-        nickName: ''
-      }
-      tempObj.num = excelObj[i][0];
-      tempObj.nickName = excelObj[i][1];
-      tempObj.phone = excelObj[i][2];
-      tempObj.time = excelObj[i][3];
-      tempArr.push(tempObj)
-    }
-    try {
-      StudentModel.insertMany(tempArr, function(err){
-        if(err){
-          console.log("错误！");
-        } else {
-          res.json({
-            status: 2001,
-            data: tempArr
-          })
-        }
-      });
-    } catch (error) {
-      
-    }
-  }
-
-  async getExcel (req, res) {
-    console.log(req.files)
-    res.json({
-      status: 2000
-    })
   }
   
 }

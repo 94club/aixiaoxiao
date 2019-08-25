@@ -18,7 +18,7 @@
 [6、 restful api]
 post新增 put 更新 delete 删除 get 获取
 db.createUser({user:"admin888",pwd:"admin***888",roles:[{role:"userAdminAnyDatabase",db:"admin"}]})
-db.createUser({user:"test888",pwd:"test***888",roles:[{role:"readWrite",db:"test"}]})
+db.createUser({user:"xiaoai",pwd:"txiaoai2019",roles:[{role:"readWrite",db:"xiaoai"}]})
 升序 sort({_id: 1}) {_id: -1}
 
 后台的功能   

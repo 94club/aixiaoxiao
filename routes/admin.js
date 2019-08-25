@@ -9,4 +9,6 @@ router.post('/v1/addNotice', Admin.addNotice)
 router.post('/v1/addAcitivity', Admin.addAcitivity)
 router.post('/v1/addDaoju', Admin.addDaoju)
 router.post('/v1/updateDaoju', Admin.updateDaoju)
+router.get('/v1/getUserInfo', Admin.getUserInfo)
+router.post('/v1/adminLogout', Admin.logout)
 module.exports = router

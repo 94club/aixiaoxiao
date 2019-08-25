@@ -474,8 +474,24 @@ class User extends Base{
 
   async getYuan (req, res) {
     console.log(req.query)
-    let {type} = req.query
-    let yuanList = await YuanModel.find({type}).sort({_id: -1})
+    let {type, page, pageSize} = req.query
+    if (!pageSize) {
+      pageSize = 10
+    }
+    if (!page) {
+      page = 1
+    }
+    try {
+      if (!type) {
+        
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+    }
+    let yuanList = await YuanModel.find({type}).sort({_id: -1}).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
     res.json({
       status: 200,
       message: '查询成功',

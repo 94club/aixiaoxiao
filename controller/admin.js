@@ -2,6 +2,7 @@ import Base from './base';
 
 const schedule = require('node-schedule');
 import DaojuModel from '../models/daoju'
+import NoticeModel from '../models/notice'
 import YuanModel from '../models/yuan'
 import dateAndTime from 'date-and-time'
 import AdminModel from '../models/admin'
@@ -18,8 +19,11 @@ class Admin extends Base {
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
     this.addNotice = this.addNotice.bind(this)
+    this.getNotice = this.getNotice.bind(this)
     this.addAcitivity = this.addAcitivity.bind(this)
+    this.getAcitivity = this.getAcitivity.bind(this)
     this.addDaoju = this.addDaoju.bind(this)
+    this.getDaoju = this.getDaoju.bind(this)
     this.updateDaoju = this.updateDaoju.bind(this)
     this.login = this.login.bind(this)
     this.logout = this.logout.bind(this)
@@ -209,7 +213,7 @@ class Admin extends Base {
             message: '更新成功'
           })
           this.addRecord({
-            username,
+            username: req.user.username,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '心愿 '+ id +'被审核了'
           })
@@ -222,9 +226,136 @@ class Admin extends Base {
       })
     }
   }
-  async addNotice (req, res) {}
+  async addNotice (req, res) {
+    let {des} = req.body
+    try {
+      if (!des) {
+        throw new Error('描述不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+      return
+    }
+    let noticeList = await NoticeModel.find({})
+    let newNotice = {
+      des,
+      id: noticeList.length + 1,
+      createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+    }
+    try {
+      NoticeModel.create(newNotice, (err) => {
+        if (err) {
+          res.json({
+            status: 0,
+            message: '添加失败'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '添加成功'
+          })
+          this.addRecord({
+            username: req.user.username,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + req.user.username + '创建了公告'
+          })
+        }
+      })
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+    }
+  }
+  async getNotice (req, res) {
+    let noticeList = await NoticeModel.find({})
+    res.json({
+      status: 200,
+      data: noticeList,
+      message: '请求公告成功'
+    })
+  }
   async addAcitivity (req, res) {}
-  async addDaoju (req, res) {}
+  async getAcitivity (req, res) {}
+  async addDaoju (req, res) {
+    let {des, type, amount} = res.body
+    try {
+      if (!des) {
+        throw new Error('描述不能为空')
+      } else if (!type) {
+        throw new Error('类型不能为空')
+      } else if (!amount) {
+        throw new Error('数量必须大于0')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+      return
+    }
+    let newDaoju = {
+      createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+      amount,
+      type,
+      des
+    }
+    try {
+      DaojuModel.create(newDaoju, (err) => {
+        if (err) {
+          res.json({
+            status: 0,
+            message: '添加失败'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '添加成功'
+          })
+          this.addRecord({
+            username: req.user.username,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + req.user.username + '创建了道具'
+          })
+        }
+      })
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+    }
+  }
+  async getDaoju (req, res) {
+    let {ownerId, pageSize, page} = res.query
+    if (!pageSize) {
+      pageSize = 10
+    }
+    if (!page) {
+      page = 1
+    }
+    try {
+      if (!parseInt(ownerId)) {
+        throw new Error('id不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+      return
+    }
+    let daojuList = await DaojuModel.find({ownerId}).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
+    res.json({
+      status: 200,
+      data: daojuList,
+      message: '查询道具成功'
+    })
+  }
   async updateDaoju (req, res) {}
   async startSchedule (req, res) {}
 }

@@ -12,9 +12,11 @@ const daojuSchema = new Schema({
   }, // 是否使用
   type: Number, // 1心愿币修改卡0.5倍 2心愿币修改卡2倍 3昵称修改卡 4 心愿换位卡
   des: String,
-  id: Number,
   amount: Number, // 数量
-  ownerID: Number // 0代表系统
+  ownerId: {
+    type: Number,
+    default: 0
+  } // 0代表系统
 })
 
 const Daoju = mongoose.model('Daoju', daojuSchema)

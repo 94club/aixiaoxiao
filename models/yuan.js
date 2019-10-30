@@ -16,11 +16,11 @@ const yuanSchema = new Schema({
   createdTime: String, // 创建时间
   checkTime: String, // 审核时间
   finishedTime: String, // 完成时间
-  type: String, // 0 系统任务 1 双人任务 2 对方任务
+  type: String, // 1 系统任务 2 双人任务 3 对方任务
   amount: String, //任务心愿币
   daojuId: {
     type: Number,
-    default: 0
+    default: 1
   }, // 道具Id
   operationText: Array // 操作日志
 })

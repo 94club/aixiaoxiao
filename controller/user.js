@@ -313,7 +313,7 @@ class User extends Base{
   }
 
   async saveYuan (req, res) {
-    let {type, des, title, amount} = req.body
+    let {type, des, amount} = req.body
     try {
       if (!type) {
         throw new Error('类型不能为空')
@@ -469,6 +469,36 @@ class User extends Base{
     }
   }
 
+  async getYuan (req, res) {
+    console.log(req.query)
+    // 首页可以看所有的   进入内页只能看自己的
+    let {type, page, pageSize, stauts, createdBy} = req.query
+    if (!pageSize) {
+      pageSize = 10
+    }
+    if (!page) {
+      page = 1
+    }
+    try {
+      if (!type) {
+        throw new Error('类型不能为空')
+      } else if (!status) {
+        throw new Error('状态不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+    }
+    let yuanList = await YuanModel.find({type, stauts, createdBy}).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
+    res.json({
+      status: 200,
+      message: '查询成功',
+      data: yuanList
+    })
+  }
+
   async buyDaoju (req, res) {
     // 查一遍道具的数量
     let {id, cpMoney} = res.body
@@ -505,32 +535,7 @@ class User extends Base{
     // 查一遍道具的数量
   }
 
-  async getYuan (req, res) {
-    console.log(req.query)
-    let {type, page, pageSize} = req.query
-    if (!pageSize) {
-      pageSize = 10
-    }
-    if (!page) {
-      page = 1
-    }
-    try {
-      if (!type) {
-        
-      }
-    } catch (error) {
-      res.json({
-        status: 0,
-        message: error.message
-      })
-    }
-    let yuanList = await YuanModel.find({type}).sort({_id: -1}).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
-    res.json({
-      status: 200,
-      message: '查询成功',
-      data: yuanList
-    })
-  }
+  
   
   async saveMood (req, res) {
     let reqInfo = req.body

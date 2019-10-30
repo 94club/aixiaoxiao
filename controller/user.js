@@ -24,6 +24,7 @@ class User extends Base{
     this.getMood = this.getMood.bind(this)
     this.updateUserInfo = this.updateUserInfo.bind(this)
     this.buyDaoju = this.buyDaoju.bind(this)
+    this.useDaoju = this.useDaoju.bind(this)
     this.saveYuan = this.saveYuan.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
@@ -469,6 +470,38 @@ class User extends Base{
   }
 
   async buyDaoju (req, res) {
+    // 查一遍道具的数量
+    let {id, cpMoney} = res.body
+    try {
+      if (!id) {
+        throw new Error('id不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+    }
+    let daojuInfo = await DaojuModel.find({id})
+    if (daojuInfo.amount === 0) {
+      res.json({
+        status: 0,
+        message: '数量不足，请提醒管理员补货'
+      })
+      return
+    }
+    let userInfo = await UserModel.findOne({tokenName: req.user.tokenName})
+    if (userInfo.cpMoney > cpMoney) {
+      
+    } else {
+      res.json({
+        status: 0,
+        message: '心愿币不足，请多发表心情，多签到和完成TA的心愿'
+      })
+    }
+  }
+
+  async useDaoju (req, res) {
     // 查一遍道具的数量
   }
 

@@ -12,6 +12,8 @@ const daojuSchema = new Schema({
   }, // 是否使用
   type: Number, // 1心愿币修改卡0.5倍 2心愿币修改卡2倍 3昵称修改卡 4 心愿换位卡
   des: String,
+  id: Number,
+  money: Number, // 购买所需心愿币
   amount: Number, // 数量
   ownerId: {
     type: Number,

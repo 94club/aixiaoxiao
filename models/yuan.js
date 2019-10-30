@@ -6,21 +6,17 @@ const Schema = mongoose.Schema
 
 const yuanSchema = new Schema({
   id: Number,
-  status: Number, // 1审核中 2待领取 3 进行中 4结束 5 关闭
-  title: String, // 心愿标题
+  status: Number, // 1进行中 2审核中 3完成
   des: String, // 心愿描述
   createdBy: String, // 创建人
-  accectedBy: {
-    type: String,
-    default: ''
+  finishedBy: {
+    type: Array,
+    default: []
   }, // 执行人
   createdTime: String, // 创建时间
+  checkTime: String, // 审核时间
   finishedTime: String, // 完成时间
-  type: String, // 0 心愿任务 1 双人任务
-  progress: {
-    type: Number,
-    default: 0 // 双人进度 默认0 1 完成1人 2 完成2人
-  },
+  type: String, // 0 系统任务 1 双人任务 2 对方任务
   amount: String, //任务心愿币
   daojuId: {
     type: Number,

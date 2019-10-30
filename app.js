@@ -24,8 +24,8 @@ app.all('*', (req, res, next) => {
 // logger.initRequestLogger(app) // 日志系统
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'))
-app.set('view engine', 'ejs')
+// app.set('views', path.join(__dirname, 'views'))
+// app.set('view engine', 'ejs')
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
@@ -33,7 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 // 静态服务使用 https://www.cnblogs.com/xiaozhuyuan/p/7207682.html
  
 app.use(bodyParser.json()) // for parsing application/json
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.urlencoded({ extended: true, limit: 50 * 1024 }))
 // 返回的对象是一个键值对，当extended为false的时候，键值对中的值就为'String'或'Array'形式，为true的时候，则可为任何数据类型。
 // for parsing application/x-www-form-urlencoded
 // app.use('/api', index) // 给接口加前缀

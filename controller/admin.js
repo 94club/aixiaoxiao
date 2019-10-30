@@ -24,7 +24,6 @@ class Admin extends Base {
     this.getAcitivity = this.getAcitivity.bind(this)
     this.addDaoju = this.addDaoju.bind(this)
     this.getDaoju = this.getDaoju.bind(this)
-    this.updateDaoju = this.updateDaoju.bind(this)
     this.login = this.login.bind(this)
     this.logout = this.logout.bind(this)
     this.getUserInfo = this.getUserInfo.bind(this)
@@ -102,6 +101,7 @@ class Admin extends Base {
       }
     }
   }
+
   async logout (req, res) {
     res.json({
       status: 200,
@@ -109,6 +109,7 @@ class Admin extends Base {
     })
     redisManager.remove(req)
   }
+
   async getUserInfo (req, res) {
     let username = req.user.username
     let userInfo = await AdminModel.findOne({username})
@@ -125,6 +126,7 @@ class Admin extends Base {
       })
     }
   }
+
   async addYuanMoney (req, res) {
     let {id, gain} = req.body.id
     try {
@@ -185,6 +187,7 @@ class Admin extends Base {
       message: '查询成功'
     })
   }
+
   async updateYuan (req, res) {
     let {id} = req.body
     try {
@@ -226,6 +229,7 @@ class Admin extends Base {
       })
     }
   }
+
   async addNotice (req, res) {
     let {des} = req.body
     try {
@@ -271,6 +275,7 @@ class Admin extends Base {
       })
     }
   }
+
   async getNotice (req, res) {
     let noticeList = await NoticeModel.find({})
     res.json({
@@ -282,6 +287,8 @@ class Admin extends Base {
   async addAcitivity (req, res) {}
   async getAcitivity (req, res) {}
   async addDaoju (req, res) {
+    console.log(req.formdata)
+    console.log(req.file)
     let {des, type, amount} = res.body
     try {
       if (!des) {
@@ -298,10 +305,12 @@ class Admin extends Base {
       })
       return
     }
+    let daojuList = await DaojuModel.find({})
     let newDaoju = {
       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
       amount,
       type,
+      id: daojuList.length + 1,
       des
     }
     try {
@@ -356,7 +365,9 @@ class Admin extends Base {
       message: '查询道具成功'
     })
   }
-  async updateDaoju (req, res) {}
+  async useDaoju (req, res) {
+
+  }
   async startSchedule (req, res) {}
 }
 

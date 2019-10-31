@@ -20,14 +20,18 @@ class User extends Base{
     this.getUserInfo = this.getUserInfo.bind(this)
     this.getRecord = this.getRecord.bind(this)
     this.logout = this.logout.bind(this)
+    this.updateUserInfo = this.updateUserInfo.bind(this)
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
-    this.updateUserInfo = this.updateUserInfo.bind(this)
     this.buyDaoju = this.buyDaoju.bind(this)
     this.useDaoju = this.useDaoju.bind(this)
     this.saveYuan = this.saveYuan.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
+    this.wechatLogin = this.wechatLogin.bind(this)
+    this.wechatRegister = this.wechatRegister.bind(this)
+    this.getAllUser = this.getAllUser.bind(this)
+    this.bindUser = this.bindUser.bind(this)
   }
 
   async wechatLogin (req, res) {
@@ -41,18 +45,16 @@ class User extends Base{
           if (err) {
             res.json({
               status: 0,
-              message: '查找失败'
+              message: '查找失败,请联系管理员(微信号feng--zao)'
             })
           }
           console.log(res)
           let token
           // 先查一遍看看是否存在
           if (userInfo) {
-            token = jsonwebtoken.sign({
-              tokenName: userInfo.tokenName
-            }, constant.secretKey)
+            token = jsonwebtoken.sign({ tokenName: userInfo.nickName }, constant.secretKey)
             // 用户已存在 去登录
-            redisManager.set(token, userInfo.tokenName)
+            redisManager.set(token, userInfo.nickName)
             res.json({
               status: 200,
               message: '登录成功',
@@ -132,6 +134,71 @@ class User extends Base{
               }
             })
           }
+        })
+      }
+    })
+  }
+
+  async wechatRegister (req, res) {
+    let {code} = req.body
+    request(constant.wechatLoginUrl + code, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        console.log(body) // Show the HTML for the baidu homepage.
+        // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
+        let openId = body.openid
+        res.json({
+          status: 200,
+          message: '获取微信openid成功',
+          data: {openId}
+        })
+      } else {
+        res.json({
+          status: 0,
+          message: '获取微信openid失败'
+        })
+      }
+    })
+  }
+
+  async wechatRegister (req, res) {
+    let {code} = req.body
+    request(constant.wechatLoginUrl + code, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        console.log(body) // Show the HTML for the baidu homepage.
+        // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
+        let openId = body.openid
+        res.json({
+          status: 200,
+          message: '获取微信openid成功',
+          data: {openId}
+        })
+      } else {
+        res.json({
+          status: 200,
+          message: '获取微信openid失败',
+          data: {openId}
+        })
+      }
+    })
+  }
+
+  async wechatRegister (req, res) {
+    let {code} = req.body
+    request(constant.wechatLoginUrl + code, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        console.log(body) // Show the HTML for the baidu homepage.
+        // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
+        let openId = body.openid
+        res.json({
+          status: 200,
+          message: '获取微信openid成功',
+          data: {openId}
+        })
+      } else {
+        res.json({
+          status: 200,
+          message: '获取微信openid失败',
+          data: {openId}
         })
       }
     })
@@ -535,8 +602,6 @@ class User extends Base{
     // 查一遍道具的数量
   }
 
-  
-  
   async saveMood (req, res) {
     let reqInfo = req.body
     let moodList = await MoodModel.find({})

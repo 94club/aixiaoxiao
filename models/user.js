@@ -43,7 +43,10 @@ const userSchema = new Schema({
   }, // 连续签到天数
   id: Number,
   createTime: String,
-  createBy: String // 0代表自己注册  **代表创建人id
+  createBy: {
+    type: Number,
+    default: 1
+  } // 1代表自己注册  2代表系统
 })
 
 const User = mongoose.model('User', userSchema)

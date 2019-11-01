@@ -24,12 +24,11 @@ class Admin extends Base {
     this.getAcitivity = this.getAcitivity.bind(this)
     this.addDaoju = this.addDaoju.bind(this)
     this.getDaoju = this.getDaoju.bind(this)
-    this.login = this.login.bind(this)
-    this.logout = this.logout.bind(this)
     this.getUserInfo = this.getUserInfo.bind(this)
+    this.adminLogin = this.adminLogin.bind(this)
   }
   
-  async login (req, res) {
+  async adminLogin (req, res) {
     let reqInfo = req.body
     let {username, pwd} = reqInfo
     console.log(reqInfo)
@@ -103,6 +102,7 @@ class Admin extends Base {
   }
 
   async logout (req, res) {
+    // 清楚redis中的token
     res.json({
       status: 200,
       data: '退出成功'

@@ -1,11 +1,11 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "94club的express后端项目的api",
+    "description": "风早早和艾小小的express后端项目的api",
     "version": "1.0.0",
-    "title": "express_template",
+    "title": "express",
     "contact": {
-      "email": "alistarwang1314@gmail.com"
+      "email": "2323504502@qq.com"
     },
     "license": {
       "name": "Apache 2.0",
@@ -21,7 +21,11 @@
     },
     {
       "name": "user",
-      "description": "Access to Petstore orders"
+      "description": "user action"
+    },
+    {
+      "name": "admin",
+      "description": "admin action"
     }
   ],
   "schemes": [
@@ -35,42 +39,13 @@
     "application/json"
   ],
   "paths": {
-    "/api/login": {
-      "post": {
-        "tags": [
-          "api"
-        ],
-        "summary": "login and get a token",
-        "description": "",
-        "operationId": "login",
-        "parameters": [
-          {
-            "$ref": "#/parameters/userAgent"
-          },
-          {
-            "in": "body",
-            "name": "body",
-            "description": "user object",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
-          }
-        ],
-        "responses": {
-          "405": {
-            "description": "Invalid input"
-          }
-        }
-      }
-    },
-    "/user/info": {
-      "post": {
+    "/user/getUserInfo": {
+      "get": {
         "tags": [
           "user"
         ],
         "summary": "get userInfo",
-        "description": "",
+        "description": "获取用户信息",
         "operationId": "getUserInfo",
         "parameters": [
           {
@@ -78,28 +53,51 @@
           }
         ],
         "responses": {
-          "405": {
-            "description": "Invalid input"
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
           }
         }
       }
     },
-    "/user/logout": {
-      "post": {
+    "/user/getAllUser": {
+      "get": {
         "tags": [
-          "user"
+          "api"
         ],
         "summary": "logout",
         "description": "",
         "operationId": "logout",
         "parameters": [
           {
-            "$ref": "#/parameters/userAgent"
+            "name": "id",
+            "in": "query",
+            "description": "用户id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "responses": {
-          "405": {
-            "description": "Invalid input"
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
           }
         }
       }
@@ -127,6 +125,21 @@
       },
       "xml": {
         "name": "User"
+      }
+    }
+  },
+  "ApiResponse": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "data": {
+        "type": "object"
+      },
+      "message": {
+        "type": "string"
       }
     }
   }

@@ -15,11 +15,8 @@ import Base from './base'
 class User extends Base{
   constructor () {
     super()
-    this.login = this.login.bind(this)
-    this.rootLogin = this.rootLogin.bind(this)
     this.getUserInfo = this.getUserInfo.bind(this)
     this.getRecord = this.getRecord.bind(this)
-    this.logout = this.logout.bind(this)
     this.updateUserInfo = this.updateUserInfo.bind(this)
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
@@ -31,7 +28,134 @@ class User extends Base{
     this.wechatLogin = this.wechatLogin.bind(this)
     this.wechatRegister = this.wechatRegister.bind(this)
     this.getAllUser = this.getAllUser.bind(this)
-    this.bindUser = this.bindUser.bind(this)
+  }
+
+  async getUserInfo (req, res) {
+    // updateTime 更新lastloginTime  
+    let userInfo = await UserModel.findOne({nickName: req.user.tokenName}, {'_id': 0, '__v': 0, 'password': 0})
+    if (userInfo) {
+      res.json({
+        status: 200,
+        message: '查询成功',
+        data: userInfo
+      })
+      this.addRecord({
+        username: userInfo.nickName,
+        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+        opertionText: userInfo.nickName + '查询信息成功'
+      })
+    } else {
+      res.json({
+        status: 0,
+        message: '用户查询失败'
+      })
+    }
+  }
+
+  async wechatRegister (req, res) {
+    let {code} = req.body
+    request(constant.wechatLoginUrl + code, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        console.log(body) // Show the HTML for the baidu homepage.
+        // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
+        let openId = body.openid
+        // 判断是否已经注册了
+        UserModel.findOne({openId}, {'_id': 0, '__v': 0}, (err, userInfo) => {
+          if (err) {
+            res.json({
+              status: 0,
+              message: '查询失败，请稍后重试'
+            })
+            return
+          }
+          if (userInfo) {
+            res.json({
+              status: 0,
+              message: '已注册，请直接登录'
+            })
+          } else {
+            res.json({
+              status: 200,
+              message: '获取微信openid成功',
+              data: {openId}
+            })
+          }
+        })
+      } else {
+        res.json({
+          status: 0,
+          message: '获取微信openid失败'
+        })
+      }
+    })
+  }
+
+  async wechatRegisterName (req, res) {
+    let optionData = req.body
+    try {
+      if (!optionData.nickName) {
+        throw new Error('昵称不能为空')
+      } else if (!optionData.openId) {
+        throw new Error('微信认证信息不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    let registerData = {}
+    let userArr = await UserModel.find({})
+    let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+    registerData.id = userArr.length + 1
+    registerData.openId = optionData.openId
+    registerData.nickName = optionData.nickName
+    registerData.cpName = optionData.cpName
+    registerData.lastSignTime = dateTime
+    registerData.createTime = dateTime
+    try {
+      UserModel.create(registerData, (err, userInfo) =>{
+        if (err) {
+          res.json({
+            status: 0,
+            message: '注册失败,请联系管理员(微信号feng--zao)'
+          })
+          return
+        }
+        console.log(res)
+        let token = jsonwebtoken.sign({ tokenName: userInfo.nickName }, constant.secretKey)
+            // 用户已存在 去登录
+        redisManager.set(token, userInfo.nickName)
+        res.json({
+          status: 200,
+          message: '注册成功',
+          data: {token, userInfo}
+        })
+      })
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: '注册失败,请联系管理员(微信号feng--zao)'
+      })
+    }
+  }
+
+  async getAllUser (req, res) {
+    let {id} = req.query
+    let userArr = await UserModel.find({'id': {$ne: id}, 'cpName': ''})
+    if (userArr) {
+      res.json({
+        status: 200,
+        message: '查询数据成功',
+        data: userArr
+      })
+    } else {
+      res.json({
+        status: 0,
+        message: '查询数据失败'
+      })
+    }
   }
 
   async wechatLogin (req, res) {
@@ -76,129 +200,11 @@ class User extends Base{
               console.log('日志写入catch失败')
             }
           } else {
-            UserModel.find({}, (err, docs) => {
-              if (err) {
-                res.json({
-                  status: 0,
-                  message: '查询失败'
-                })
-              }
-              let name = '幸福' + (docs.length + 1) + '号'
-              let newUser = {
-                nickName: name,
-                openId,
-                createBy: 0,
-                createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                id: 1,
-                tokenName: name
-              }
-              try {
-                UserModel.create(newUser, (err) => {
-                  if (err) {
-                    res.json({
-                      status: 0,
-                      message: '注册失败'
-                    })
-                  } else {
-                    token = jsonwebtoken.sign({
-                      tokenName: name
-                    }, constant.secretKey)
-                    redisManager.set(token, name)
-                    res.json({
-                      status: 200,
-                      message: '注册成功',
-                      data: {token}
-                    })
-                    try {
-                      RecordModel.create({
-                        username: name,
-                        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                        opertionText: '用户' + name + '被创建了'
-                      }, (err) => {
-                        if (err) {
-                          console.log('日志写入失败')
-                        } else {
-                          console.log('日志写入成功')
-                        }
-                      })
-                    } catch (err) {
-                      console.log('日志写入catch失败')
-                    }
-                  }
-                })
-              } catch (err) {
-                res.json({
-                  status: 0,
-                  message: err.message
-                })
-              }
+            res.json({
+              status: 0,
+              message: '查找失败,请联系管理员(微信号feng--zao)'
             })
           }
-        })
-      }
-    })
-  }
-
-  async wechatRegister (req, res) {
-    let {code} = req.body
-    request(constant.wechatLoginUrl + code, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
-        console.log(body) // Show the HTML for the baidu homepage.
-        // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
-        let openId = body.openid
-        res.json({
-          status: 200,
-          message: '获取微信openid成功',
-          data: {openId}
-        })
-      } else {
-        res.json({
-          status: 0,
-          message: '获取微信openid失败'
-        })
-      }
-    })
-  }
-
-  async wechatRegister (req, res) {
-    let {code} = req.body
-    request(constant.wechatLoginUrl + code, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
-        console.log(body) // Show the HTML for the baidu homepage.
-        // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
-        let openId = body.openid
-        res.json({
-          status: 200,
-          message: '获取微信openid成功',
-          data: {openId}
-        })
-      } else {
-        res.json({
-          status: 200,
-          message: '获取微信openid失败',
-          data: {openId}
-        })
-      }
-    })
-  }
-
-  async wechatRegister (req, res) {
-    let {code} = req.body
-    request(constant.wechatLoginUrl + code, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
-        console.log(body) // Show the HTML for the baidu homepage.
-        // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
-        let openId = body.openid
-        res.json({
-          status: 200,
-          message: '获取微信openid成功',
-          data: {openId}
-        })
-      } else {
-        res.json({
-          status: 200,
-          message: '获取微信openid失败',
-          data: {openId}
         })
       }
     })
@@ -280,105 +286,7 @@ class User extends Base{
         }
     }
   }
-  async rootLogin (req, res) {
-    let {username, password} = req.body
-    const tokenObj = {
-      username
-    }
-    try {
-      if (!username) {
-        throw new Error('用户不能为空')
-      }
-    } catch (err) {
-      res.json({
-        status: 0,
-        message: err.message
-      })
-      return
-    }
-    // 先查一遍看看是否存在
-    let userInfo = await RootModel.findOne({username}, {'_id': 0, '__v': 0})
-    let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
-    if (userInfo) {
-      // 用户已存在 去登录
-      redisManager.set(token, username)
-      res.json({
-        status: 200,
-        message: '登录成功',
-        data: {token, userInfo}
-      })
-      this.addRecord({
-        username,
-        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-        opertionText: userInfo.des + '' + username + '登录成功'
-      })
-    } else {
-        let newUser = {
-          username,
-          password,
-          createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-          id: 1
-        }
-        try {
-          RootModel.create(newUser, (err) => {
-            if (err) {
-              res.json({
-                status: 0,
-                message: '注册失败'
-              })
-            } else {
-              redisManager.set(token, username)
-              res.json({
-                status: 200,
-                message: '注册成功',
-                data: {token}
-              })
-              this.addRecord({
-                username,
-                createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-                opertionText: '用户' + username + '被创建了'
-              })
-            }
-          })
-        } catch (err) {
-          res.json({
-            status: 0,
-            message: err.message
-          })
-        }
-    }
-  }
-
-  async getUserInfo (req, res) {
-    let userInfo = await UserModel.findOne({tokenName: req.user.tokenName}, {'_id': 0, '__v': 0, 'password': 0})
-    if (userInfo) {
-      res.json({
-        status: 200,
-        message: '查询成功',
-        data: userInfo
-      })
-      this.addRecord({
-        username: userInfo.tokenName,
-        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-        opertionText: userInfo.tokenName + '查询信息成功'
-      })
-    } else {
-      res.json({
-        status: 0,
-        message: '用户查询失败'
-      })
-    }
-  }
   
-  async logout (req, res) {
-    // 清楚redis中的token
-    res.json({
-      status: 200,
-      data: '退出成功'
-    })
-    redisManager.remove(req)
-  }
-
   async saveYuan (req, res) {
     let {type, des, amount} = req.body
     try {

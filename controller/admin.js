@@ -15,7 +15,6 @@ class Admin extends Base {
   constructor () {
     super()
     this.startSchedule = this.startSchedule.bind(this)
-    this.addYuanMoney = this.addYuanMoney.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
     this.addNotice = this.addNotice.bind(this)
@@ -51,6 +50,7 @@ class Admin extends Base {
     // 先查一遍看看是否存在
     let userInfo = await AdminModel.findOne({username, pwd}, {'_id': 0, '__v': 0})
     let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
+    let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     if (userInfo) {
       // 用户已存在 去登录
       redisManager.set(token, username)
@@ -60,15 +60,15 @@ class Admin extends Base {
         data: {token, userInfo}
       })
       this.addRecord({
-        username,
-        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+        operator: username,
+        createTime: dateTime,
         opertionText: username + '登录成功'
       })
     } else {
       let newUser = {
         username,
         pwd,
-        createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+        createTime: dateTime,
         id: 1
       }
       try {
@@ -86,8 +86,8 @@ class Admin extends Base {
               data: {token}
             })
             this.addRecord({
-              username,
-              createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+              operator: username,
+              createTime: dateTime,
               opertionText: '用户' + username + '被创建了'
             })
           }
@@ -127,51 +127,6 @@ class Admin extends Base {
     }
   }
 
-  async addYuanMoney (req, res) {
-    let {id, gain} = req.body.id
-    try {
-      if (!id) {
-        throw new Error('id不能为空')
-      } else if (!parseInt(gain)) {
-        throw new Error('金额要大于0')
-      }
-    } catch (error) {
-      res.json({
-        status: 0,
-        message: err.message
-      })
-      return
-    }
-    let userInfo = await UserModel.find({id})
-    try {
-      UserModel.updateOne({id}, {$set: {
-        cpMoney: userInfo.cpMoney += gain
-      }}, (err) => {
-        if (err) {
-          res.json({
-            status: 0,
-            message: '更新失败'
-          })
-        } else {
-          res.json({
-            status: 200,
-            message: '更新成功'
-          })
-          this.addRecord({
-            username: req.user.username,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.username + '更新了心愿币' + gain
-          })
-        }
-      })
-    } catch (err) {
-      res.json({
-        status: 0,
-        message: err.message
-      })
-    }
-  }
-
   async getYuan (req, res) {
     let {pageSize, page} = req.body
     if (!pageSize) {
@@ -189,10 +144,18 @@ class Admin extends Base {
   }
 
   async updateYuan (req, res) {
-    let {id} = req.body
+    let {yuanId, finishedBy, moneyArr, status, operationText} = req.body
     try {
-      if (!id) {
-        throw new Error('id不能为空')
+      if (!yuanId) {
+        throw new Error('心愿ID不能为空')
+      } else if (finishedBy.length === 0) {
+        throw new Error('完成人不能为空')
+      } else if (moneyArr.length === 0) {
+        throw new Error('奖金不能为空')
+      } else if (operationText.length === 0) {
+        throw new Error('操作日志不能为空')
+      } else if (!status) {
+        throw new Error('状态不能为空')
       }
     } catch (error) {
       res.json({
@@ -201,9 +164,16 @@ class Admin extends Base {
       })
       return
     }
+    let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     try {
-      YuanModel.updateOne({id}, {$set: {
-        status: 3
+      operationText.push({
+        text: '管理员审核了心愿',
+        time: dateTime
+      })
+      YuanModel.findOneAndUpdate({id: yuanId}, {$set: {
+        status: 4,
+        operationText,
+        checkTime: dateTime
       }}, (err) => {
         if (err) {
           res.json({
@@ -216,10 +186,12 @@ class Admin extends Base {
             message: '更新成功'
           })
           this.addRecord({
-            username: req.user.username,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '心愿 '+ id +'被审核了'
+            operator: req.user.username,
+            createTime: dateTime,
+            opertionText: '心愿 '+ yuanId +'被审核了'
           })
+          this.addYuanMoney(finishedBy[0], moneyArr[0])
+          this.addYuanMoney(finishedBy[1], moneyArr[1])
         }
       })
     } catch (err) {
@@ -262,7 +234,7 @@ class Admin extends Base {
             message: '添加成功'
           })
           this.addRecord({
-            username: req.user.username,
+            operator: req.user.username,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + req.user.username + '创建了公告'
           })
@@ -326,7 +298,7 @@ class Admin extends Base {
             message: '添加成功'
           })
           this.addRecord({
-            username: req.user.username,
+            operator: req.user.username,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + req.user.username + '创建了道具'
           })
@@ -364,9 +336,6 @@ class Admin extends Base {
       data: daojuList,
       message: '查询道具成功'
     })
-  }
-  async useDaoju (req, res) {
-
   }
   async startSchedule (req, res) {}
 }

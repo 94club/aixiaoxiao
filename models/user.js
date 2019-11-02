@@ -5,19 +5,13 @@ import mongoose from 'mongoose'
 const Schema = mongoose.Schema
 
 const userSchema = new Schema({
-  cpName: {
-    type: String,
-    default: ''
-  }, // 绑定对象
   isBind: {
     type: Number,
     default: 1     // 1 解绑状态  2 绑定状态
   },
-  bindWechat: { // 绑定人的微信
-    type: String,
-    default: ''
-  },
-  bindId: Number, // 绑定人的ID
+  cpName: String, // 绑定对象
+  cpWechat: String, // 绑定人wechat
+  cpId: Number, // 绑定人的ID
   cpMoney: {
     type: Number,
     default: 0

@@ -1,7 +1,6 @@
 'use strict'
 
 import UserModel from '../models/user'
-import RootModel from '../models/root'
 import RecordModel from '../models/record'
 import MoodModel from '../models/mood'
 import DaojuModel from '../models/daoju'
@@ -16,17 +15,16 @@ class User extends Base{
   constructor () {
     super()
     this.getUserInfo = this.getUserInfo.bind(this)
-    this.getRecord = this.getRecord.bind(this)
-    this.updateUserInfo = this.updateUserInfo.bind(this)
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
     this.buyDaoju = this.buyDaoju.bind(this)
-    this.useDaoju = this.useDaoju.bind(this)
     this.saveYuan = this.saveYuan.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
     this.wechatLogin = this.wechatLogin.bind(this)
     this.wechatRegister = this.wechatRegister.bind(this)
+    this.wechatRegisterName = this.wechatRegisterName.bind(this)
+    this.wechatRegisterBindName = this.wechatRegisterBindName.bind(this)
     this.getAllUser = this.getAllUser.bind(this)
   }
 
@@ -40,7 +38,7 @@ class User extends Base{
         data: userInfo
       })
       this.addRecord({
-        username: userInfo.nickName,
+        operator: userInfo.nickName,
         createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
         opertionText: userInfo.nickName + '查询信息成功'
       })
@@ -111,7 +109,6 @@ class User extends Base{
     registerData.id = userArr.length + 1
     registerData.openId = optionData.openId
     registerData.nickName = optionData.nickName
-    registerData.cpName = optionData.cpName
     registerData.lastSignTime = dateTime
     registerData.createTime = dateTime
     try {
@@ -153,7 +150,7 @@ class User extends Base{
     } else {
       res.json({
         status: 0,
-        message: '查询数据失败'
+        message: '查询数据失败,请联系管理员(微信号feng--zao)'
       })
     }
   }
@@ -240,7 +237,7 @@ class User extends Base{
         data: {token, userInfo}
       })
       this.addRecord({
-        username: nickName,
+        operator: nickName,
         createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
         opertionText: userInfo.des + '' + nickName + '登录成功'
       })
@@ -272,7 +269,7 @@ class User extends Base{
                 data: {token}
               })
               this.addRecord({
-                username: nickName,
+                operator: nickName,
                 createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
                 opertionText: '用户' + nickName + '被创建了'
               })
@@ -287,17 +284,81 @@ class User extends Base{
     }
   }
   
-  async saveYuan (req, res) {
-    let {type, des, amount} = req.body
+  async getYuan (req, res) {
+    // 首页可以看所有的   进入内页只能看自己的
+    let {type, page, pageSize, stauts, keyword, reason} = req.query
+    // reason 1关键字搜索 2首页获取 3自己获取
+    if (!pageSize) {
+      pageSize = 20
+    }
+    if (!page) {
+      page = 1
+    }
     try {
       if (!type) {
         throw new Error('类型不能为空')
-      } else if (!title) {
-        throw new Error('标题不能为空')
+      } else if (!status) {
+        throw new Error('状态不能为空')
+      } else if (!reason) {
+        throw new Error('搜索方式不能为空')
+      } if (reason === 1 && !keyword) {
+        throw new Error('搜索关键字不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+    }
+    let filter
+    if (reason === 1) {
+      let reg = new RegExp(keyword, 'i')
+      filter = {
+        "des": {"$regex": reg}
+      }
+    }
+    if (reason === 2) {
+      filter = {
+        "type": {"$ne": 4},
+        $or: [
+          {stauts}
+        ]
+      }
+    }
+    if (reason === 3) {
+      filter = {
+        "type": 4,
+        $or: [
+          {status}
+        ]
+      }
+    }
+    let yuanList = await YuanModel.find(filter).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
+    if (yuanList) {
+      res.json({
+        status: 200,
+        message: '查询成功',
+        data: yuanList
+      })
+    } else {
+      res.json({
+        status: 0,
+        message: '查询失败,请联系管理员(微信号feng--zao)'
+      })
+    }
+  }
+
+  async saveYuan (req, res) {
+    let {type, des, amount, createdBy} = req.body
+    try {
+      if (!type) {
+        throw new Error('类型不能为空')
       } else if (!amount) {
         throw new Error('心愿币不能为空')
       } else if (!des) {
         throw new Error('描述不能为空')
+      } else if (!createdBy) {
+        throw new Error('创建人不能为空')
       }
     } catch (err) {
       res.json({
@@ -307,41 +368,37 @@ class User extends Base{
       return
     }
     let operationText = []
-    let userInfo = await UserModel.findOne({tokenName: req.user.tokenName})
-    let status = 1
-    operationText.push({text: '任务正在审核中', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
-    if (userInfo.activeNumber > 50) {
-      status = 3
-      operationText.push({text: '任务自动审核通过', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
-    }
+    let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+    operationText.push({text: createdBy + '创建了心愿', time: dateTime})
     let yuanList = await YuanModel.find({})
     let newYuan = {
-      type,
+      id: yuanList.length + 1,
+      status: 1,
       des,
-      title,
+      createTime: dateTime,
+      type,
       amount,
-      status,
-      createdBy: name,
-      id: yuanList.length + 1
+      createdBy,
+      operationText,
     }
     try {
-      YuanModel.create(newYuan, (err) => {
+      YuanModel.create(newYuan, (err, yuanInfo) => {
         if (err) {
           res.json({
             status: 0,
-            message: '申请失败'
+            message: '创建失败,请联系管理员(微信号feng--zao)'
           })
         } else {
           res.json({
             status: 200,
             message: '申请成功'
           })
-          this.addCpMoney(userInfo.tokenName, 50)
-          this.addActiveNumber(userInfo.tokenName, 1)
+          this.addYuanMoney(yuanInfo.createdBy, 50)
+          this.addActiveNumber(yuanInfo.createdBy, 1)
           this.addRecord({
-            username: userInfo.tokenName,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + userInfo.tokenName + '申请了一个心愿'
+            operator: yuanInfo.createdBy,
+            createTime: dateTime,
+            opertionText: '用户' + yuanInfo.createdBy + '创建了一个心愿， id=' + yuanList.length
           })
         }
       })
@@ -354,16 +411,22 @@ class User extends Base{
   }
 
   async updateYuan (req, res) {
-    let {status, daojuId, id, amount, createdBy, accectedBy, operationText} = req.body
+    // 点击完成（会操作同一条数据，需要锁）  使用道具  点击审核
+    let {status, daojuId, daojuDes, daojuArr, yuanId, userId, finishedBy, submitTime, operationText} = req.body
+    let operator = req.user.tokenName
     try {
       if (!status) {
-        throw new Error('状态不能为空')
-      } else if (!id) {
-        throw new Error('id不能为空')
-      } else if (!amount) {
-        throw new Error('心愿币不能为空')
-      } else if (!createdBy) {
-        throw new Error('创建人不能为空')
+        throw new Error('操作状态不能为空')
+      } else if (!yuanId) {
+        throw new Error('心愿ID不能为空')
+      } else if (!userId) {
+        throw new Error('用户ID不能为空')
+      } else if (status === 3 && !daojuId) {
+        throw new Error('道具ID不能为空')
+      } else if (finishedBy.length === 0) {
+        throw new Error('完成人不能为空')
+      } else if (submitTime.length === 0) {
+        throw new Error('提交时间不能为空')
       }
     } catch (err) {
       res.json({
@@ -372,106 +435,67 @@ class User extends Base{
       })
       return
     }
-    try {
-      let daojuInfo = ''
-      let temp = ''
-      if (daojuId) {
-        daojuInfo = await DaojuModel.findOne({id: daojuId})
-      }
-      switch (status){
-        case 2:
-            operationText.push({text: '任务审核通过,待领取', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
-          break;
-        case 3:
-            if (daojuId) {
-              operationText.push({text: accectedBy + '使用了道具卡' + daojuInfo.des, time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
-            } else {
-              operationText.push({text: '任务被' + accectedBy + '领取，正在进行中', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
-            }
-          break;
-        case 4:
-            operationText.push({text: createdBy + '结束了任务', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
-          break;
-        case 5:
-            operationText.push({text: '系统关闭了任务', time: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")})
-          break;
-        default:
-          break;
-      }
-      if (daojuId === 1) {
-        amount *= 0.5
-      }
-      if (daojuId === 2) {
-        amount *= 2
-      }
-      if (daojuId === 4 && status === 3) {
-        temp = accectedBy
-        accectedBy = createdBy
-        createdBy = temp
-      }
-      YuanModel.updateOne({id}, {$set: {
-        amount,
-        daojuId,
-        status,
-        createBy,
-        accectedBy
-      }}, (err) => {
-        if (err) {
-          res.json({
-            status: 0,
-            message: '更新失败'
-          })
-        } else {
+    let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+    if (status === 2) {
+      // 完成了这个任务
+      operationText.push({
+        text: operator + '完成了心愿',
+        time: dateTime
+      })
+      finishedBy.push(userId)
+      try {
+        YuanModel.findOneAndUpdate({id: yuanId}, {$set: {status: 2, finishedBy, submitTime, operationText}}, {new: true}, (err, yuanInfo) => {
+          if (err) {
+            res.json({
+              status: 0,
+              message: '更新失败,请联系管理员(微信号feng--zao)'
+            })
+            return
+          }
           res.json({
             status: 200,
-            message: '更新成功'
+            message: '更新成功',
+            data: yuanInfo
           })
-          if (daojuId) {
-            this.useDaoju(daojuId, req.user.tokenName)
-          }
-          this.addRecord({
-            username: req.user.tokenName,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.tokenName + '更新了心愿'
-          })
-        }
-      })
-    } catch (err) {
-      res.json({
-        status: 0,
-        message: err.message
-      })
-    }
-  }
-
-  async getYuan (req, res) {
-    console.log(req.query)
-    // 首页可以看所有的   进入内页只能看自己的
-    let {type, page, pageSize, stauts, createdBy} = req.query
-    if (!pageSize) {
-      pageSize = 10
-    }
-    if (!page) {
-      page = 1
-    }
-    try {
-      if (!type) {
-        throw new Error('类型不能为空')
-      } else if (!status) {
-        throw new Error('状态不能为空')
+        })
+      } catch (error) {
+        res.json({
+          status: 0,
+          message: '更新失败,请联系管理员(微信号feng--zao)'
+        })
       }
-    } catch (error) {
-      res.json({
-        status: 0,
-        message: error.message
-      })
     }
-    let yuanList = await YuanModel.find({type, stauts, createdBy}).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
-    res.json({
-      status: 200,
-      message: '查询成功',
-      data: yuanList
-    })
+    if (status === 3) {
+      // 使用道具
+      daojuArr.push(daojuId)
+      operationText.push({
+        text: operator + '使用了道具' + daojuId + ',' + daojuDes,
+        time: dateTime
+      })
+      try {
+        YuanModel.findOneAndUpdate({id: yuanId}, {$set: {status: 2, operationText}}, {new: true}, (err, yuanInfo) => {
+          if (err) {
+            res.json({
+              status: 0,
+              message: '更新失败,请联系管理员(微信号feng--zao)'
+            })
+            return
+          }
+          res.json({
+            status: 200,
+            message: '更新成功',
+            data: yuanInfo
+          })
+          // 跟新道具ID
+          this.useDaoju(daojuId)
+        })
+      } catch (error) {
+        res.json({
+          status: 0,
+          message: '更新失败,请联系管理员(微信号feng--zao)'
+        })
+      }
+    }
   }
 
   async buyDaoju (req, res) {
@@ -506,18 +530,16 @@ class User extends Base{
     }
   }
 
-  async useDaoju (req, res) {
-    // 查一遍道具的数量
-  }
-
   async saveMood (req, res) {
     let reqInfo = req.body
     let moodList = await MoodModel.find({})
-    let {des, imageStrList, videoPath} = reqInfo
-    let tokenName = req.user.tokenName
+    let {des, imageStrList, videoPath, userId} = reqInfo
+    let userName = req.user.tokenName
     try {
       if (!des) {
         throw new Error('心情不能为空')
+      } else if (!userId) {
+        throw new Error('用户id不能为空')
       }
     } catch (err) {
       res.json({
@@ -530,7 +552,8 @@ class User extends Base{
       des,
       imageStrList,
       videoPath,
-      createBy: tokenName,
+      createdId: userId,
+      createdname: userName,
       createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
       id: moodList.length + 1
     }
@@ -552,17 +575,17 @@ class User extends Base{
         if (err) {
           res.json({
             status: 0,
-            message: '添加失败'
+            message: '添加失败,请联系管理员(微信号feng--zao)'
           })
         } else {
           res.json({
             status: 200,
             message: '添加成功,收获' + gain + '心愿币'
           })
-          this.addCpMoney(tokenName, gain)
+          this.addYuanMoney(userId, gain)
           this.addActiveNumber(tokenName, 1)
           this.addRecord({
-            username: tokenName,
+            operator: tokenName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + tokenName + '创建了心愿'
           })
@@ -571,13 +594,14 @@ class User extends Base{
     } catch (err) {
       res.json({
         status: 0,
-        message: err.message
+        message: '添加失败,请联系管理员(微信号feng--zao)'
       })
     }
   }
 
   async getMood (req, res) {
-    let moodList = await MoodModel.find({}, {'_id': 0, '__v': 0})
+    let {createdName} = req.query
+    let moodList = await MoodModel.find({createdName}, {'_id': 0, '__v': 0})
     if (moodList) {
       res.json({
         status: 200,
@@ -587,7 +611,7 @@ class User extends Base{
     } else {
       res.json({
         status: 0,
-        message: '查询失败，请联系管理员'
+        message: '查询失败,请联系管理员(微信号feng--zao)'
       })
     }
   }
@@ -630,9 +654,9 @@ class User extends Base{
             status: 200,
             message: '连续签到成功，奖励' + (gain + 5) + '心愿币'
           })
-          this.addCpMoney(tokenName, gain + 5)
+          this.addYuanMoney(tokenName, gain + 5)
           this.addRecord({
-            username: tokenName,
+            operator: tokenName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + tokenName + '连续签到成功'
           })
@@ -641,9 +665,9 @@ class User extends Base{
             status: 200,
             message: '签到成功，奖励5心愿币'
           })
-          this.addCpMoney(nickName, gain)
+          this.addYuanMoney(nickName, gain)
           this.addRecord({
-            username: nickName,
+            operator: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + nickName + '签到成功'
           })
@@ -653,11 +677,17 @@ class User extends Base{
     })
   }
 
-  async updateUserInfo (req, res) {
-    let {nickName, wechat, cpName} = req.body
+  async wechatRegisterBindName (req, res) {
+    let {cpId, operatorId, cpWechat, cpName, operatorName} = req.body
     try {
-      if (!nickName && !wechat && !cpName) {
-        throw new Error('修改数据不能为空')
+      if (!cpId) {
+        throw new Error('操作人ID不能为空')
+      } else if (!operatorId) {
+        throw new Error('绑定人ID不能为空')
+      } else if (!cpWechat) {
+        throw new Error('微信号不能为空')
+      } else if (!cpName) {
+        throw new Error('操作人不能为空')
       }
     } catch (err) {
       res.json({
@@ -666,83 +696,31 @@ class User extends Base{
       })
       return
     }
-    if (nickName) {
-      let userInfo = await UserModel.findOne({tokenName:  req.user.tokenName})
-      UserModel.updateOne({tokenName: req.user.tokenName}, {$set: {
-        nickName,
-        nameChangeTimes: userInfo.nameChangeTimes--
-      }}, (error) => {
-        if (error) {
-          console.error(error);
-          res.json({
-            status: 0,
-            message: '修改失败，请联系管理员muduo770'
-          })
-        } else {
-          res.json({
-            status: 200,
-            message: '昵称修改成功'
-          })
-
-          this.addRecord({
-            username: req.user.tokenName,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.tokenName + '修改昵称-->' + nickName
-          })
-        }
-      })
-    }
-    if (cpName) {
-      let userInfo = await UserModel.findOne({tokenName:  req.user.tokenName})
-      UserModel.updateOne({tokenName: req.user.tokenName}, {$set: {
-        cpName: userInfo.cpName
-      }}, (error) => {
-        if (error) {
-          console.error(error);
-          res.json({
-            status: 0,
-            message: '绑定失败，请联系管理员muduo770'
-          })
-        } else {
-          res.json({
-            status: 200,
-            message: '绑定搭档成功，奖励50心愿币'
-          })
-          this.addCpMoney(req.user.tokenName, 50)
-          this.addActiveNumber(req.user.tokenName, 5)
-          this.addRecord({
-            username: req.user.tokenName,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.tokenName + '绑定搭档昵称' + cpName
-          })
-        }
-      })
-    }
-    if (wechat) {
-      UserModel.updateOne({tokenName: req.user.tokenName}, {$set: {
-        wechat
-      }}, (error) => {
-        if (error) {
-          console.error(error);
-          res.json({
-            status: 0,
-            message: '修改失败，请联系管理员muduo770'
-          })
-        } else {
-          res.json({
-            status: 200,
-            message: 'wechat修改成功'
-          })
-          this.addRecord({
-            username: req.user.tokenName,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + req.user.tokenName + '修改微信号-->' + wechat
-          })
-        }
-      })
-    }
+    UserModel.updateOne({id: operatorId}, {$set: {
+      isBind: 2,
+      cpWechat,
+      cpId,
+      cpName
+    }}, (error) => {
+      if (error) {
+        console.error(error);
+        res.json({
+          status: 0,
+          message: '修改失败，请联系管理员(微信号feng--zao)'
+        })
+      } else {
+        res.json({
+          status: 200,
+          message: '操作成功，等待对方同意'
+        })
+        this.addRecord({
+          operator: cpName,
+          createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+          opertionText: '用户' + cpName + '提交绑定申请-->' + operatorName
+        })
+      }
+    })
   }
-  
 }
 
 export default new User()

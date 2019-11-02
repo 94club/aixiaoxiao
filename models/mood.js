@@ -10,7 +10,8 @@ const moodSchema = new Schema({
   imageStrList: Array, // 图片
   videoPath: String, // 录音文件
   id: Number,
-  createdBy: String
+  createdName: String,
+  createdId: Number
 })
 
 const Mood = mongoose.model('Mood', moodSchema)

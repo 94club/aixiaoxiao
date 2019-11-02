@@ -7,8 +7,8 @@ import dateAndTime from 'date-and-time'
 export default class Base {
   constructor () {
     this.addRecord = this.addRecord.bind(this)
+    this.addYuanMoney = this.addYuanMoney.bind(this)
     this.getRecord = this.getRecord.bind(this)
-    this.addCpMoney = this.addCpMoney.bind(this)
     this.useDaoju = this.useDaoju.bind(this)
     this.addActiveNumber = this.addActiveNumber.bind(this)
   }
@@ -30,6 +30,7 @@ export default class Base {
   }
   useDaoju (id, nickName) {
     try {
+      // findoneandupdate只会更新第一条查到的数据  update会更新所有查到的数据
       DaojuModel.updateOne({id}, {$set: {
         isUsed: true,
         useTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
@@ -38,7 +39,7 @@ export default class Base {
           console.log('日志写入失败')
         } else {
           this.addRecord({
-            username: nickName,
+            operator: nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + nickName + '使用了道具卡' + id
           })
@@ -47,23 +48,6 @@ export default class Base {
     } catch (error) {
       
     }
-  }
-
-  async addCpMoney (nickName, gain) {
-    let userInfo = await UserModel.findOne({nickName})
-    UserModel.update({nickName}, {$set: {
-      cpMoney: userInfo.cpMoney += gain
-    }}, function (error) {
-      if (error) {
-        console.error('更新心愿币失败');
-      } else {
-        this.addRecord({
-          username: nickName,
-          createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-          opertionText: '用户' + nickName + '增加' + gain + '心愿币'
-        })
-      }
-    })
   }
 
   async addActiveNumber (nickName, gain) {
@@ -75,7 +59,7 @@ export default class Base {
         console.error('更新活跃度失败');
       } else {
         this.addRecord({
-          username: nickName,
+          operator: nickName,
           createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
           opertionText: '用户' + nickName + '增加' + gain + '活跃度'
         })
@@ -98,4 +82,47 @@ export default class Base {
     }
   }
 
+  async addYuanMoney (id, gain) {
+    try {
+      if (!id) {
+        throw new Error('id不能为空')
+      } else if (!parseInt(gain)) {
+        throw new Error('金额要大于0')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    let userInfo = await UserModel.findOne({id})
+    try {
+      UserModel.updateOne({id}, {$set: {
+        cpMoney: userInfo.cpMoney += gain
+      }}, (err) => {
+        if (err) {
+          res.json({
+            status: 0,
+            message: '更新失败'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '更新成功'
+          })
+          this.addRecord({
+            operator: req.user.username,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + userInfo.nickName + '更新了心愿币' + gain
+          })
+        }
+      })
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+    }
+  }
 }

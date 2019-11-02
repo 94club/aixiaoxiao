@@ -5,7 +5,7 @@ import mongoose from 'mongoose'
 const Schema = mongoose.Schema
 
 const recordSchema = new Schema({
-    username: String,
+    operator: String, // 操作者
     createTime: String,
     opertionText: String,
     type: {

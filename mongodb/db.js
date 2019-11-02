@@ -2,7 +2,7 @@
 
 import mongoose from 'mongoose'
 import chalk from 'chalk'
-console.log(process.env.NODE_ENV)
+console.log(process.env.NODE_ENV + '--')
 if (process.env.NODE_ENV === 'development') {
   mongoose.connect('mongodb://xiaoai:xiaoai2019@localhost:27017/xiaoai', {
     useNewUrlParser: true

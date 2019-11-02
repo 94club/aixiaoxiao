@@ -14,7 +14,6 @@ const daojuSchema = new Schema({
   des: String,
   id: Number,
   money: Number, // 购买所需心愿币
-  amount: Number, // 数量
   ownerId: {
     type: Number,
     default: 0

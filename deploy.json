@@ -13,6 +13,9 @@
     "node_args": [],
     "args": [],
     "env": {
+      "PORT": 8002,
+      "NODE_ENV": "production",
+      "SHOW_DOC": true
     }
   }]
 }

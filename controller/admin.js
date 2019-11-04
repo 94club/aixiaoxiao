@@ -14,26 +14,23 @@ import redisManager from '../config/redis'
 class Admin extends Base {
   constructor () {
     super()
-    this.startSchedule = this.startSchedule.bind(this)
+    this.adminLogin = this.adminLogin.bind(this)
+    this.getUserInfo = this.getUserInfo.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
+    this.addDaoju = this.addDaoju.bind(this)
+    this.getDaoju = this.getDaoju.bind(this)
+    this.startSchedule = this.startSchedule.bind(this)
     this.addNotice = this.addNotice.bind(this)
     this.getNotice = this.getNotice.bind(this)
     this.addAcitivity = this.addAcitivity.bind(this)
     this.getAcitivity = this.getAcitivity.bind(this)
-    this.addDaoju = this.addDaoju.bind(this)
-    this.getDaoju = this.getDaoju.bind(this)
-    this.getUserInfo = this.getUserInfo.bind(this)
-    this.adminLogin = this.adminLogin.bind(this)
   }
   
   async adminLogin (req, res) {
     let reqInfo = req.body
     let {username, pwd} = reqInfo
     console.log(reqInfo)
-    const tokenObj = {
-      username
-    }
     try {
       if (!username) {
         throw new Error('用户不能为空')
@@ -49,7 +46,7 @@ class Admin extends Base {
     }
     // 先查一遍看看是否存在
     let userInfo = await AdminModel.findOne({username, pwd}, {'_id': 0, '__v': 0})
-    let token = jsonwebtoken.sign(tokenObj, constant.secretKey)
+    let token = jsonwebtoken.sign({username}, constant.secretKey)
     let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     if (userInfo) {
       // 用户已存在 去登录
@@ -57,7 +54,7 @@ class Admin extends Base {
       res.json({
         status: 200,
         message: '登录成功',
-        data: {token, userInfo}
+        data: {token}
       })
       this.addRecord({
         operator: username,
@@ -72,24 +69,26 @@ class Admin extends Base {
         id: 1
       }
       try {
-        AdminModel.create(newUser, (err) => {
+        AdminModel.create(newUser, (err, userInfo) => {
           if (err) {
             res.json({
               status: 0,
               message: '注册失败'
             })
           } else {
-            redisManager.set(token, username)
-            res.json({
-              status: 200,
-              message: '注册成功',
-              data: {token}
-            })
-            this.addRecord({
-              operator: username,
-              createTime: dateTime,
-              opertionText: '用户' + username + '被创建了'
-            })
+            if (userInfo) {
+              redisManager.set(token, username)
+              res.json({
+                status: 200,
+                message: '注册成功',
+                data: {token}
+              })
+              this.addRecord({
+                operator: username,
+                createTime: dateTime,
+                opertionText: '用户' + username + '被创建了'
+              })
+            }
           }
         })
       } catch (err) {
@@ -105,14 +104,14 @@ class Admin extends Base {
     // 清楚redis中的token
     res.json({
       status: 200,
-      data: '退出成功'
+      message: '退出成功'
     })
     redisManager.remove(req)
   }
 
   async getUserInfo (req, res) {
     let username = req.user.username
-    let userInfo = await AdminModel.findOne({username})
+    let userInfo = await AdminModel.findOne({username}, {'_id': 0, '__v': 0, 'password': 0})
     if (userInfo) {
       res.json({
         status: 200,
@@ -259,16 +258,12 @@ class Admin extends Base {
   async addAcitivity (req, res) {}
   async getAcitivity (req, res) {}
   async addDaoju (req, res) {
-    console.log(req.formdata)
-    console.log(req.file)
-    let {des, type, amount} = res.body
+    let {des, amount} = res.body
     try {
       if (!des) {
         throw new Error('描述不能为空')
       } else if (!type) {
         throw new Error('类型不能为空')
-      } else if (!amount) {
-        throw new Error('数量必须大于0')
       }
     } catch (error) {
       res.json({
@@ -277,29 +272,31 @@ class Admin extends Base {
       })
       return
     }
+    let createTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     let daojuList = await DaojuModel.find({})
     let newDaoju = {
-      createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+      createTime,
       amount,
-      type,
       id: daojuList.length + 1,
       des
     }
     try {
-      DaojuModel.create(newDaoju, (err) => {
+      DaojuModel.create(newDaoju, (err, info) => {
         if (err) {
           res.json({
             status: 0,
             message: '添加失败'
           })
-        } else {
+          return
+        } 
+        if (info) {
           res.json({
             status: 200,
             message: '添加成功'
           })
           this.addRecord({
             operator: req.user.username,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            createTime,
             opertionText: '用户' + req.user.username + '创建了道具'
           })
         }

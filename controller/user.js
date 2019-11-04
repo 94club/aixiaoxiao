@@ -18,6 +18,7 @@ class User extends Base{
     this.saveMood = this.saveMood.bind(this)
     this.getMood = this.getMood.bind(this)
     this.buyDaoju = this.buyDaoju.bind(this)
+    this.useDaoju = this.useDaoju.bind(this)
     this.saveYuan = this.saveYuan.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
@@ -500,10 +501,19 @@ class User extends Base{
 
   async buyDaoju (req, res) {
     // 查一遍道具的数量
-    let {id, cpMoney} = res.body
+    let {ownerId, money, ownerName, id, des} = res.body
+    let createTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss") 
     try {
       if (!id) {
-        throw new Error('id不能为空')
+        throw new Error('道具id不能为空')
+      } else if (!ownerId) {
+        throw new Error('用户ownerId不能为空')
+      } else if (!money) {
+        throw new Error('道具money不能为空')
+      } else if (!ownerName) {
+        throw new Error('用户ownerName不能为空')
+      } else if (!des) {
+        throw new Error('道具des不能为空')
       }
     } catch (error) {
       res.json({
@@ -511,22 +521,76 @@ class User extends Base{
         message: error.message
       })
     }
-    let daojuInfo = await DaojuModel.find({id})
-    if (daojuInfo.amount === 0) {
-      res.json({
-        status: 0,
-        message: '数量不足，请提醒管理员补货'
-      })
-      return
+    let daojuList = await DaojuModel.find({})
+    let createData = {
+      createTime,
+      type,
+      des,
+      id: daojuList.length + 1,
+      money,
+      ownerId,
+      ownerName
     }
-    let userInfo = await UserModel.findOne({tokenName: req.user.tokenName})
-    if (userInfo.cpMoney > cpMoney) {
-      
-    } else {
+    try {
+      DaojuModel.create(createData, (err, info) => {
+        if (err) {
+          res.json({
+            status: 0,
+            message: '添加失败,请联系管理员(微信号feng--zao)'
+          })
+          return
+        }
+        if (info) {
+          res.json({
+            status: 200,
+            message: '购买成功'
+          })
+          this.addYuanMoney(ownerId, -money)
+          this.addRecord({
+            operator: ownerName,
+            createTime,
+            opertionText: '用户' + ownerName + '购买了道具'
+          })
+        }
+      })
+    } catch (error) {
       res.json({
         status: 0,
-        message: '心愿币不足，请多发表心情，多签到和完成TA的心愿'
+        message: '购买失败,请联系管理员(微信号feng--zao)'
       })
+    }
+  }
+
+  async useDaoju (req, res) {
+    let {id} = req.body
+    try {
+      if (!id) {
+        throw new Error('道具id不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+    }
+    try {
+      // findoneandupdate只会更新第一条查到的数据  update会更新所有查到的数据
+      DaojuModel.updateOne({id}, {$set: {
+        isUsed: true,
+        usedTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+      }}, (err) => {
+        if (err) {
+          console.log('日志写入失败')
+        } else {
+          this.addRecord({
+            operator: req.user.tokenName,
+            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+            opertionText: '用户' + req.user.tokenName + '使用了道具卡' + id
+          })
+        }
+      })
+    } catch (error) {
+      
     }
   }
 
@@ -558,7 +622,7 @@ class User extends Base{
       id: moodList.length + 1
     }
     try {
-      MoodModel.create(newMood, (err) => {
+      MoodModel.create(newMood, (err, info) => {
         let gain = 0
         if (newMood.des.length > 30) {
           gain += 50
@@ -577,7 +641,9 @@ class User extends Base{
             status: 0,
             message: '添加失败,请联系管理员(微信号feng--zao)'
           })
-        } else {
+          return
+        }
+        if (info) {
           res.json({
             status: 200,
             message: '添加成功,收获' + gain + '心愿币'

@@ -9,7 +9,6 @@ export default class Base {
     this.addRecord = this.addRecord.bind(this)
     this.addYuanMoney = this.addYuanMoney.bind(this)
     this.getRecord = this.getRecord.bind(this)
-    this.useDaoju = this.useDaoju.bind(this)
     this.addActiveNumber = this.addActiveNumber.bind(this)
   }
 
@@ -28,27 +27,7 @@ export default class Base {
       })
     }
   }
-  useDaoju (id, nickName) {
-    try {
-      // findoneandupdate只会更新第一条查到的数据  update会更新所有查到的数据
-      DaojuModel.updateOne({id}, {$set: {
-        isUsed: true,
-        useTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
-      }}, (err) => {
-        if (err) {
-          console.log('日志写入失败')
-        } else {
-          this.addRecord({
-            operator: nickName,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + nickName + '使用了道具卡' + id
-          })
-        }
-      })
-    } catch (error) {
-      
-    }
-  }
+  
 
   async addActiveNumber (nickName, gain) {
     let userInfo = await UserModel.findOne({nickName})

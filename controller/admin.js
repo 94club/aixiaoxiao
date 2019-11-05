@@ -111,7 +111,7 @@ class Admin extends Base {
 
   async getUserInfo (req, res) {
     let username = req.user.username
-    let userInfo = await AdminModel.findOne({username}, {'_id': 0, '__v': 0, 'password': 0})
+    let userInfo = await AdminModel.findOne({username}, {'_id': 0, '__v': 0, 'pwd': 0})
     if (userInfo) {
       res.json({
         status: 200,
@@ -258,12 +258,12 @@ class Admin extends Base {
   async addAcitivity (req, res) {}
   async getAcitivity (req, res) {}
   async addDaoju (req, res) {
-    let {des, amount} = res.body
+    let {des, money} = req.body
     try {
       if (!des) {
         throw new Error('描述不能为空')
-      } else if (!type) {
-        throw new Error('类型不能为空')
+      } else if (!money) {
+        throw new Error('金额不能为空')
       }
     } catch (error) {
       res.json({
@@ -276,7 +276,7 @@ class Admin extends Base {
     let daojuList = await DaojuModel.find({})
     let newDaoju = {
       createTime,
-      amount,
+      money,
       id: daojuList.length + 1,
       des
     }
@@ -309,16 +309,12 @@ class Admin extends Base {
     }
   }
   async getDaoju (req, res) {
-    let {ownerId, pageSize, page} = res.query
-    if (!pageSize) {
-      pageSize = 10
-    }
-    if (!page) {
-      page = 1
-    }
+    let {pageSize, pageNo} = req.query
     try {
-      if (!parseInt(ownerId)) {
-        throw new Error('id不能为空')
+      if (!pageSize) {
+        throw new Error('pageSize不能为空')
+      } else if (!pageNo) {
+        throw new Error('pageNo不能为空')
       }
     } catch (error) {
       res.json({
@@ -327,12 +323,19 @@ class Admin extends Base {
       })
       return
     }
-    let daojuList = await DaojuModel.find({ownerId}).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
-    res.json({
-      status: 200,
-      data: daojuList,
-      message: '查询道具成功'
-    })
+    let daojuList = await DaojuModel.find({}).sort({_id: -1}).limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)
+    if (daojuList) {
+      res.json({
+        status: 200,
+        data: daojuList,
+        message: '查询道具成功'
+      })
+    } else {
+      res.json({
+        status: 0,
+        message: '查询道具失败'
+      })
+    }
   }
   async startSchedule (req, res) {}
 }

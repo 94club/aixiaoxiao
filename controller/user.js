@@ -514,7 +514,7 @@ class User extends Base{
 
   async buyDaoju (req, res) {
     // 查一遍道具的数量
-    let {ownerId, money, ownerName, id, des} = res.body
+    let {ownerId, money, ownerName, id, des} = req.body
     let createTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss") 
     try {
       if (!id) {

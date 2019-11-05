@@ -52,8 +52,24 @@ class User extends Base{
   }
 
   async wechatRegister (req, res) {
-    let {code} = req.body
+    let optionData = req.body
     console.log(code)
+    try {
+      if (!optionData.nickName) {
+        throw new Error('昵称不能为空')
+      } else if (!optionData.code) {
+        throw new Error('微信认证信息不能为空')
+      } else if (!optionData.avatarUrl) {
+        throw new Error('微信头像信息不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    let userArr = await UserModel.find({})
     request(constant.wechatLoginUrl + code, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.
@@ -74,11 +90,39 @@ class User extends Base{
               message: '已注册，请直接登录'
             })
           } else {
-            res.json({
-              status: 200,
-              message: '获取微信openid成功',
-              data: {openId}
-            })
+            // 注册
+            let registerData = {}
+            let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+            registerData.id = userArr.length + 1
+            registerData.openId = optionData.openId
+            registerData.nickName = optionData.nickName
+            registerData.lastSignTime = dateTime
+            registerData.createTime = dateTime
+            try {
+              UserModel.create(registerData, (err, userInfo) =>{
+                if (err) {
+                  res.json({
+                    status: 0,
+                    message: '注册失败,请联系管理员(微信号feng--zao)'
+                  })
+                  return
+                }
+                console.log(res)
+                let token = jsonwebtoken.sign({ tokenName: userInfo.nickName }, constant.secretKey)
+                    // 用户已存在 去登录
+                redisManager.set(token, userInfo.nickName)
+                res.json({
+                  status: 200,
+                  message: '注册成功',
+                  data: {token, userInfo}
+                })
+              })
+            } catch (error) {
+              res.json({
+                status: 0,
+                message: '注册失败,请联系管理员(微信号feng--zao)'
+              })
+            }
           }
         })
       } else {
@@ -105,39 +149,7 @@ class User extends Base{
       })
       return
     }
-    let registerData = {}
-    let userArr = await UserModel.find({})
-    let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
-    registerData.id = userArr.length + 1
-    registerData.openId = optionData.openId
-    registerData.nickName = optionData.nickName
-    registerData.lastSignTime = dateTime
-    registerData.createTime = dateTime
-    try {
-      UserModel.create(registerData, (err, userInfo) =>{
-        if (err) {
-          res.json({
-            status: 0,
-            message: '注册失败,请联系管理员(微信号feng--zao)'
-          })
-          return
-        }
-        console.log(res)
-        let token = jsonwebtoken.sign({ tokenName: userInfo.nickName }, constant.secretKey)
-            // 用户已存在 去登录
-        redisManager.set(token, userInfo.nickName)
-        res.json({
-          status: 200,
-          message: '注册成功',
-          data: {token, userInfo}
-        })
-      })
-    } catch (error) {
-      res.json({
-        status: 0,
-        message: '注册失败,请联系管理员(微信号feng--zao)'
-      })
-    }
+    
   }
 
   async getAllUser (req, res) {

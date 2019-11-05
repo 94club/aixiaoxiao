@@ -53,6 +53,7 @@ class User extends Base{
 
   async wechatRegister (req, res) {
     let {code} = req.body
+    console.log(code)
     request(constant.wechatLoginUrl + code, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node index.js",
+    "testpro": "cross-env NODE_ENV=production nodemon --harmony index.js",	
     "dev": "cross-env NODE_ENV=development nodemon --harmony index.js",
     "pro": "cross-env NODE_ENV=production  pm2 start index.js --node-args='--harmony'",
     "stop": "cross-env NODE_ENV=production  pm2 start index.js --node-args='--harmony'",

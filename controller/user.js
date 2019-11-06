@@ -68,7 +68,7 @@ class User extends Base{
       })
       return
     }
-    request(constant.wechatLoginUrl + code, (error, response, body) => {
+    request(constant.wechatLoginUrl + optionData.code, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         console.log(body) // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}

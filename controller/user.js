@@ -25,13 +25,12 @@ class User extends Base{
     this.wechatLogin = this.wechatLogin.bind(this)
     this.wechatRegister = this.wechatRegister.bind(this)
     this.wechatRegisterName = this.wechatRegisterName.bind(this)
-    this.wechatRegisterBindName = this.wechatRegisterBindName.bind(this)
     this.getAllUser = this.getAllUser.bind(this)
   }
 
   async getUserInfo (req, res) {
     // updateTime 更新lastloginTime  
-    let userInfo = await UserModel.findOne({nickName: req.user.tokenName}, {'_id': 0, '__v': 0, 'password': 0})
+    let userInfo = await UserModel.findOne({nickName: req.user.tokenName}, {'_id': 0, '__v': 0})
     if (userInfo) {
       res.json({
         status: 200,
@@ -70,7 +69,7 @@ class User extends Base{
     }
     request(constant.wechatLoginUrl + optionData.code, (error, response, body) => {
       if (!error && response.statusCode == 200) {
-        console.log(body) // Show the HTML for the baidu homepage.
+        // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
         let openId = body.openid
         // 判断是否已经注册了
@@ -114,7 +113,6 @@ class User extends Base{
                       })
                       return
                     }
-                    console.log(res)
                     let token = jsonwebtoken.sign({ tokenName: userInfo.nickName }, constant.secretKey)
                         // 用户已存在 去登录
                     redisManager.set(token, userInfo.nickName)
@@ -144,12 +142,17 @@ class User extends Base{
   }
 
   async wechatRegisterName (req, res) {
-    let optionData = req.body
+    // cpID是自己的id   userId是对方的
+    let {cpName, cpWechat, cpId, userId} = req.body
     try {
-      if (!optionData.nickName) {
-        throw new Error('昵称不能为空')
-      } else if (!optionData.openId) {
-        throw new Error('微信认证信息不能为空')
+      if (!cpName) {
+        throw new Error('绑定昵称不能为空')
+      } else if (!cpWechat) {
+        throw new Error('绑定微信不能为空')
+      } else if (!cpId) {
+        throw new Error('绑定ID不能为空')
+      } else if (!userId) {
+        throw new Error('对方ID不能为空')
       }
     } catch (err) {
       res.json({
@@ -158,12 +161,59 @@ class User extends Base{
       })
       return
     }
-    
+    //先把自己isbind更新
+    UserModel.findOneAndUpdate({id: cpId}, {$set: {isBind: 2}}, (err, userInfo) => {
+      if (err) {
+        res.json({
+          status: 0,
+          message: '内部错误,更新数据失败,请联系管理员(微信号feng--zao)'
+        })
+        return
+      }
+      if (userInfo) {
+        UserModel.findOneAndUpdate({id: userId}, {$set: {isBind: 2, cpName, cpWechat, cpId}}, (err, info) => {
+          if (err) {
+            res.json({
+              status: 0,
+              message: '内部错误,更新数据失败,请联系管理员(微信号feng--zao)'
+            })
+            return
+          }
+          if (info) {
+            res.json({
+              status: 200,
+              message: '绑定成功'
+            })
+          } else {
+            res.json({
+              status: 0,
+              message: '更新数据失败,请联系管理员(微信号feng--zao)'
+            })
+          }
+        })
+      } else {
+        res.json({
+          status: 0,
+          message: '更新数据失败,请联系管理员(微信号feng--zao)'
+        })
+      }
+    })
   }
 
   async getAllUser (req, res) {
     let {id} = req.query
-    let userArr = await UserModel.find({'id': {$ne: id}, 'cpName': ''})
+    try {
+      if (!id) {
+        throw new Error('用户id不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    let userArr = await UserModel.find({'id': {$ne: id}, 'isBind': 1})
     if (userArr) {
       res.json({
         status: 200,
@@ -180,9 +230,20 @@ class User extends Base{
 
   async wechatLogin (req, res) {
     let {code} = req.body
+    try {
+      if (!code) {
+        throw new Error('登录认证不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
     request(constant.wechatLoginUrl + code, (error, response, body) => {
     if (!error && response.statusCode == 200) {
-        console.log(body) // Show the HTML for the baidu homepage.
+        // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
         let openId = body.openid
         UserModel.findOne({openId}, (err, userInfo) =>{
@@ -192,7 +253,6 @@ class User extends Base{
               message: '查找失败,请联系管理员(微信号feng--zao)'
             })
           }
-          console.log(res)
           let token
           // 先查一遍看看是否存在
           if (userInfo) {
@@ -233,7 +293,6 @@ class User extends Base{
   async login (req, res) {
     let reqInfo = req.body
     let {nickName} = reqInfo
-    console.log(reqInfo)
     const tokenObj = {
       nickName
     }
@@ -309,14 +368,8 @@ class User extends Base{
   
   async getYuan (req, res) {
     // 首页可以看所有的   进入内页只能看自己的
-    let {type, page, pageSize, stauts, keyword, reason} = req.query
+    let {type, pageNo, pageSize, stauts, keyword, reason} = req.query
     // reason 1关键字搜索 2首页获取 3自己获取
-    if (!pageSize) {
-      pageSize = 20
-    }
-    if (!page) {
-      page = 1
-    }
     try {
       if (!type) {
         throw new Error('类型不能为空')
@@ -326,6 +379,10 @@ class User extends Base{
         throw new Error('搜索方式不能为空')
       } if (reason === 1 && !keyword) {
         throw new Error('搜索关键字不能为空')
+      } else if (!pageSize) {
+        throw new Error('pageSize不能为空')
+      } else if (!pageNo) {
+        throw new Error('pageNo不能为空')
       }
     } catch (error) {
       res.json({
@@ -356,7 +413,7 @@ class User extends Base{
         ]
       }
     }
-    let yuanList = await YuanModel.find(filter).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
+    let yuanList = await YuanModel.find(filter).sort({_id: -1}).limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)
     if (yuanList) {
       res.json({
         status: 200,
@@ -731,10 +788,9 @@ class User extends Base{
       signTimes: userInfo.signTimes + 1
     }}, (error) => {
       if (error) {
-        console.error(error);
         res.json({
           status: 0,
-          message: '签到失败，请联系管理员muduo770'
+          message: '查询失败,请联系管理员(微信号feng--zao)'
         })
       } else {
         if (gain > 0) {
@@ -765,50 +821,6 @@ class User extends Base{
     })
   }
 
-  async wechatRegisterBindName (req, res) {
-    let {cpId, operatorId, cpWechat, cpName, operatorName} = req.body
-    try {
-      if (!cpId) {
-        throw new Error('操作人ID不能为空')
-      } else if (!operatorId) {
-        throw new Error('绑定人ID不能为空')
-      } else if (!cpWechat) {
-        throw new Error('微信号不能为空')
-      } else if (!cpName) {
-        throw new Error('操作人不能为空')
-      }
-    } catch (err) {
-      res.json({
-        status: 0,
-        message: err.message
-      })
-      return
-    }
-    UserModel.updateOne({id: operatorId}, {$set: {
-      isBind: 2,
-      cpWechat,
-      cpId,
-      cpName
-    }}, (error) => {
-      if (error) {
-        console.error(error);
-        res.json({
-          status: 0,
-          message: '修改失败，请联系管理员(微信号feng--zao)'
-        })
-      } else {
-        res.json({
-          status: 200,
-          message: '操作成功，等待对方同意'
-        })
-        this.addRecord({
-          operator: cpName,
-          createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-          opertionText: '用户' + cpName + '提交绑定申请-->' + operatorName
-        })
-      }
-    })
-  }
 }
 
 export default new User()

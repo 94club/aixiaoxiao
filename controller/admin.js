@@ -30,7 +30,6 @@ class Admin extends Base {
   async adminLogin (req, res) {
     let reqInfo = req.body
     let {username, pwd} = reqInfo
-    console.log(reqInfo)
     try {
       if (!username) {
         throw new Error('用户不能为空')

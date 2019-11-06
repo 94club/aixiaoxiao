@@ -18,6 +18,7 @@ class Admin extends Base {
     this.getUserInfo = this.getUserInfo.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
+    this.getUser = this.getUser.bind(this)
     this.addDaoju = this.addDaoju.bind(this)
     this.getDaoju = this.getDaoju.bind(this)
     this.startSchedule = this.startSchedule.bind(this)
@@ -126,19 +127,63 @@ class Admin extends Base {
   }
 
   async getYuan (req, res) {
-    let {pageSize, page} = req.body
-    if (!pageSize) {
-      pageSize = 10
+    let {pageSize, pageNo} = req.query
+    try {
+      if (!pageSize) {
+        throw new Error('pageSize不能为空')
+      } else if (!pageNo) {
+        throw new Error('pageNo不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+      return
     }
-    if (!page) {
-      page = 1
+    let yuanList = await YuanModel.find({}).sort({_id: -1}).limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)
+    if (yuanList) {
+      res.json({
+        status: 200,
+        data: yuanList,
+        message: '查询道具成功'
+      })
+    } else {
+      res.json({
+        status: 0,
+        message: '查询道具失败'
+      })
     }
-    let yuanList = await YuanModel.find({}).sort({_id: -1}).limit(pageSize).skip(page * pageSize)
-    res.json({
-      status: 200,
-      data: yuanList,
-      message: '查询成功'
-    })
+  }
+
+  async getUser (req, res) {
+    let {pageSize, pageNo} = req.query
+    try {
+      if (!pageSize) {
+        throw new Error('pageSize不能为空')
+      } else if (!pageNo) {
+        throw new Error('pageNo不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
+      return
+    }
+    let userList = await UserModel.find({}).sort({_id: -1}).limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)
+    if (userList) {
+      res.json({
+        status: 200,
+        data: userList,
+        message: '查询道具成功'
+      })
+    } else {
+      res.json({
+        status: 0,
+        message: '查询道具失败'
+      })
+    }
   }
 
   async updateYuan (req, res) {

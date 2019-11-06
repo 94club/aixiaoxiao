@@ -6,6 +6,8 @@ import Upload from '../middware/upload'
 router.post('/v1/startSchedule', Admin.startSchedule)
 router.post('/v1/addYuanMoney', Admin.addYuanMoney)
 router.post('/v1/updateYuan', Admin.updateYuan)
+router.get('/v1/getYuan', Admin.getYuan)
+router.get('/v1/getUser', Admin.getUser)
 router.post('/v1/addNotice', Admin.addNotice)
 router.post('/v1/addAcitivity', Admin.addAcitivity)
 router.post('/v1/addDaoju', Upload.uploadMiddleware , Admin.addDaoju)

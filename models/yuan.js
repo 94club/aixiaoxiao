@@ -6,14 +6,17 @@ const Schema = mongoose.Schema
 
 const yuanSchema = new Schema({
   id: Number,
-  status: Number, // 1进行中 2待审核 3使用道具 4完成 
+  status: {
+    type: Number,
+    default: 1
+  }, // 1进行中 2待审核 完成 
   des: String, // 心愿描述
   createdBy: String, // 创建人
   finishedBy: {
     type: Array,
     default: []
   }, // 执行人
-  createdTime: String, // 创建时间
+  createTime: String, // 创建时间
   checkTime: String, // 审核时间
   submitTime: {
     type: Array,

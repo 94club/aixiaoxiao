@@ -4,6 +4,7 @@ import UserModel from '../models/user'
 import RecordModel from '../models/record'
 import MoodModel from '../models/mood'
 import DaojuModel from '../models/daoju'
+import YuanModel from '../models/yuan'
 import dateAndTime from 'date-and-time'
 import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
@@ -19,7 +20,7 @@ class User extends Base{
     this.getMood = this.getMood.bind(this)
     this.buyDaoju = this.buyDaoju.bind(this)
     this.useDaoju = this.useDaoju.bind(this)
-    this.saveYuan = this.saveYuan.bind(this)
+    this.addYuan = this.addYuan.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
     this.wechatLogin = this.wechatLogin.bind(this)
@@ -428,7 +429,7 @@ class User extends Base{
     }
   }
 
-  async saveYuan (req, res) {
+  async addYuan (req, res) {
     let {type, des, amount, createdBy} = req.body
     try {
       if (!type) {
@@ -457,7 +458,7 @@ class User extends Base{
       des,
       createTime: dateTime,
       type,
-      amount,
+      amount: parseInt(amount),
       createdBy,
       operationText,
     }
@@ -471,10 +472,10 @@ class User extends Base{
         } else {
           res.json({
             status: 200,
-            message: '申请成功'
+            message: '创建成功'
           })
           this.addYuanMoney(yuanInfo.createdBy, 50)
-          this.addActiveNumber(yuanInfo.createdBy, 1)
+          // this.addActiveNumber(yuanInfo.createdBy, 1)
           this.addRecord({
             operator: yuanInfo.createdBy,
             createTime: dateTime,

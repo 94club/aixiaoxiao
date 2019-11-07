@@ -27,6 +27,8 @@ class User extends Base{
     this.wechatRegister = this.wechatRegister.bind(this)
     this.wechatRegisterName = this.wechatRegisterName.bind(this)
     this.getAllUser = this.getAllUser.bind(this)
+    this.resetBind = this.resetBind.bind(this)
+    this.finishBind = this.finishBind.bind(this)
   }
 
   async getUserInfo (req, res) {
@@ -187,6 +189,113 @@ class User extends Base{
             res.json({
               status: 200,
               message: '绑定成功'
+            })
+          } else {
+            res.json({
+              status: 0,
+              message: '更新数据失败,请联系管理员(微信号feng--zao)'
+            })
+          }
+        })
+      } else {
+        res.json({
+          status: 0,
+          message: '更新数据失败,请联系管理员(微信号feng--zao)'
+        })
+      }
+    })
+  }
+
+  async resetBind (req, res) {
+    // cpId---isBind--->1    userId----isBind--->1---cp***---''
+    let {cpId, userId} = req.body
+    try {
+      if (!cpId) {
+        throw new Error('绑定id不能为空')
+      } else if (!userId) {
+        throw new Error('用户id不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    UserModel.findOneAndUpdate({id: cpId}, {$set: {isBind: 1}}, (err, userInfo) => {
+      if (err) {
+        res.json({
+          status: 0,
+          message: '内部错误,更新数据失败,请联系管理员(微信号feng--zao)'
+        })
+        return
+      }
+      if (userInfo) {
+        UserModel.findOneAndUpdate({id: userId}, {$set: {isBind: 1, cpName: '', cpWechat: '', cpId: ''}}, (err, info) => {
+          if (err) {
+            res.json({
+              status: 0,
+              message: '内部错误,更新数据失败,请联系管理员(微信号feng--zao)'
+            })
+            return
+          }
+          if (info) {
+            res.json({
+              status: 200,
+              message: '解绑成功'
+            })
+          } else {
+            res.json({
+              status: 0,
+              message: '更新数据失败,请联系管理员(微信号feng--zao)'
+            })
+          }
+        })
+      } else {
+        res.json({
+          status: 0,
+          message: '更新数据失败,请联系管理员(微信号feng--zao)'
+        })
+      }
+    })
+  }
+
+  async finishBind (req, res) {
+    let {cpId, userId, nickName} = req.body
+    try {
+      if (!cpId) {
+        throw new Error('绑定id不能为空')
+      } else if (!userId) {
+        throw new Error('用户id不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    UserModel.findOneAndUpdate({id: cpId}, {$set: {isBind: 3, cpName: nickName, cpId: userId}}, (err, userInfo) => {
+      if (err) {
+        res.json({
+          status: 0,
+          message: '内部错误,更新数据失败,请联系管理员(微信号feng--zao)'
+        })
+        return
+      }
+      if (userInfo) {
+        UserModel.findOneAndUpdate({id: userId}, {$set: {isBind: 3,}}, (err, info) => {
+          if (err) {
+            res.json({
+              status: 0,
+              message: '内部错误,更新数据失败,请联系管理员(微信号feng--zao)'
+            })
+            return
+          }
+          if (info) {
+            res.json({
+              status: 200,
+              message: '解绑成功'
             })
           } else {
             res.json({

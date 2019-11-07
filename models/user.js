@@ -7,7 +7,7 @@ const Schema = mongoose.Schema
 const userSchema = new Schema({
   isBind: {
     type: Number,
-    default: 1     // 1 解绑状态  2 绑定状态
+    default: 1     // 1 没有绑定  2 正在绑定  3完成绑定
   },
   cpName: String, // 绑定对象
   cpWechat: String, // 绑定人wechat

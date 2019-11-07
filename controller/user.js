@@ -86,7 +86,8 @@ class User extends Base{
           if (userInfo) {
             res.json({
               status: 0,
-              message: '已注册，请直接登录'
+              message: '已注册，请直接登录',
+              data: userInfo
             })
           } else {
             UserModel.find({}, (err, userArr) => {
@@ -248,7 +249,9 @@ class User extends Base{
     if (!error && response.statusCode == 200) {
         // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
-        let openId = body.openid
+        let weData = JSON.parse(body)
+        // 判断是否已经注册了
+        let openId = weData.openid
         UserModel.findOne({openId}, (err, userInfo) =>{
           if (err) {
             res.json({

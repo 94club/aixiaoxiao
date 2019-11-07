@@ -11,5 +11,6 @@ router.post('/v1/updateYuan', User.updateYuan)
 router.get('/v1/getYuan', User.getYuan)
 router.post('/v1/buyDaoju', User.buyDaoju)
 router.post('/v1/daySign', User.daySign)
+router.get('/v1/getAllUser', User.getAllUser)
 
 module.exports = router

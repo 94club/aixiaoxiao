@@ -72,9 +72,9 @@ class User extends Base{
       if (!error && response.statusCode == 200) {
         // Show the HTML for the baidu homepage.
         // {"session_key":"4JkHEf5pYabUASZkz8yKDQ==","openid":"o7PgB5et_Kccerxml7qrgbJE8-Oo"}
-        const openId = body.openid
+        let weData = JSON.parse(body)
         // 判断是否已经注册了
-        console.log(openId + '--')
+        let openId = weData.openid
         UserModel.findOne({openId}, {'_id': 0, '__v': 0}, (err, userInfo) => {
           if (err) {
             res.json({

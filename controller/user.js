@@ -231,7 +231,7 @@ class User extends Base{
         return
       }
       if (userInfo) {
-        UserModel.findOneAndUpdate({id: userId}, {$set: {isBind: 1, cpName: '', cpWechat: '', cpId: ''}}, (err, info) => {
+        UserModel.findOneAndUpdate({id: userId}, {$set: {isBind: 1, cpName: '', cpWechat: '', cpId: 0}}, (err, info) => {
           if (err) {
             res.json({
               status: 0,
@@ -295,7 +295,7 @@ class User extends Base{
           if (info) {
             res.json({
               status: 200,
-              message: '解绑成功'
+              message: '绑定成功'
             })
           } else {
             res.json({

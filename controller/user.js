@@ -101,7 +101,7 @@ class User extends Base{
                 let registerData = {}
                 let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
                 registerData.id = userArr.length + 1
-                registerData.openId = optionData.openId
+                registerData.openId = openId
                 registerData.nickName = optionData.nickName
                 registerData.lastSignTime = dateTime
                 registerData.createTime = dateTime

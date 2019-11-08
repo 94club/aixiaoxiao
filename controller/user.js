@@ -486,9 +486,7 @@ class User extends Base{
     let {pageNo, pageSize, status, keyword, reason} = req.query
     // reason 1关键字搜索 2首页获取 3自己获取
     try {
-      if (!status) {
-        throw new Error('状态不能为空')
-      } else if (!reason) {
+      if (!reason) {
         throw new Error('搜索方式不能为空')
       } if (reason === 1 && !keyword) {
         throw new Error('搜索关键字不能为空')
@@ -521,10 +519,7 @@ class User extends Base{
     }
     if (reason === 3) {
       filter = {
-        "type": 4,
-        $or: [
-          {status}
-        ]
+        "type": 4
       }
     }
     let yuanList = await YuanModel.find(filter).sort({_id: -1}).limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)

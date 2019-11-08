@@ -483,12 +483,10 @@ class User extends Base{
   
   async getYuan (req, res) {
     // 首页可以看所有的   进入内页只能看自己的
-    let {type, pageNo, pageSize, stauts, keyword, reason} = req.query
+    let {pageNo, pageSize, stauts, keyword, reason} = req.query
     // reason 1关键字搜索 2首页获取 3自己获取
     try {
-      if (!type) {
-        throw new Error('类型不能为空')
-      } else if (!status) {
+      if (!status) {
         throw new Error('状态不能为空')
       } else if (!reason) {
         throw new Error('搜索方式不能为空')
@@ -509,6 +507,7 @@ class User extends Base{
     if (reason === 1) {
       let reg = new RegExp(keyword, 'i')
       filter = {
+        "type": {"$ne": 4},
         "des": {"$regex": reg}
       }
     }

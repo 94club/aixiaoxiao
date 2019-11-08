@@ -22,8 +22,8 @@ const yuanSchema = new Schema({
     type: Array,
     default: []
   }, // 提交完成时间
-  type: String, // 1 系统任务 2 双人任务 3 对方 4 自己    双人任务判断length===2 进入审核
-  amount: String, //任务心愿币
+  type: Number, // 1 系统任务 2 双人任务 3 对方 4 自己    双人任务判断length===2 进入审核
+  amount: Number, //任务心愿币
   daojuArr: { // 审核时使用
     type: Array,
     default: []

@@ -483,7 +483,7 @@ class User extends Base{
   
   async getYuan (req, res) {
     // 首页可以看所有的   进入内页只能看自己的
-    let {pageNo, pageSize, stauts, keyword, reason} = req.query
+    let {pageNo, pageSize, status, keyword, reason} = req.query
     // reason 1关键字搜索 2首页获取 3自己获取
     try {
       if (!status) {
@@ -515,7 +515,7 @@ class User extends Base{
       filter = {
         "type": {"$ne": 4},
         $or: [
-          {stauts}
+          {status}
         ]
       }
     }

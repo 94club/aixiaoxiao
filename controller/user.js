@@ -16,7 +16,7 @@ class User extends Base{
   constructor () {
     super()
     this.getUserInfo = this.getUserInfo.bind(this)
-    this.saveMood = this.saveMood.bind(this)
+    this.addMood = this.addMood.bind(this)
     this.getMood = this.getMood.bind(this)
     this.buyDaoju = this.buyDaoju.bind(this)
     this.useDaoju = this.useDaoju.bind(this)
@@ -782,14 +782,12 @@ class User extends Base{
     }
   }
 
-  async saveMood (req, res) {
+  async addMood (req, res) {
     let reqInfo = req.body
-    let moodList = await MoodModel.find({})
-    let {des, imageStrList, videoPath, userId} = reqInfo
-    let userName = req.user.tokenName
+    let {des, imageStrList, videoPath, voicePath, userId, nickName} = reqInfo
     try {
       if (!des) {
-        throw new Error('心情不能为空')
+        throw new Error('心情描述不能为空')
       } else if (!userId) {
         throw new Error('用户id不能为空')
       }
@@ -800,13 +798,16 @@ class User extends Base{
       })
       return
     }
+    let moodList = await MoodModel.find({})
+    let dataTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     let newMood = {
       des,
       imageStrList,
       videoPath,
-      createdId: userId,
-      createdname: userName,
-      createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
+      voicePath,
+      createName: nickName,
+      createId: userId,
+      createTime: dataTime,
       id: moodList.length + 1
     }
     try {
@@ -818,6 +819,9 @@ class User extends Base{
           gain += 30
         }
         if (newMood.videoPath) {
+          gain += 20
+        }
+        if (newMood.voicePath) {
           gain += 20
         }
         let sl = newMood.imageStrList.length
@@ -837,11 +841,11 @@ class User extends Base{
             message: '添加成功,收获' + gain + '心愿币'
           })
           this.addYuanMoney(userId, gain)
-          this.addActiveNumber(tokenName, 1)
+          // this.addActiveNumber(tokenName, 1)
           this.addRecord({
-            operator: tokenName,
-            createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
-            opertionText: '用户' + tokenName + '创建了心愿'
+            operator: nickName,
+            createTime: dataTime,
+            opertionText: '用户' + nickName + '创建了心情'
           })
         }
       })
@@ -854,8 +858,19 @@ class User extends Base{
   }
 
   async getMood (req, res) {
-    let {createdName} = req.query
-    let moodList = await MoodModel.find({createdName}, {'_id': 0, '__v': 0})
+    let {id} = req.query
+    try {
+      if (!id) {
+        throw new Error('id不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return   
+    }
+    let moodList = await MoodModel.find({id}, {'_id': 0, '__v': 0})
     if (moodList) {
       res.json({
         status: 200,

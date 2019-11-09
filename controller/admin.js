@@ -1,6 +1,5 @@
 import Base from './base';
 
-const schedule = require('node-schedule');
 import DaojuModel from '../models/daoju'
 import NoticeModel from '../models/notice'
 import YuanModel from '../models/yuan'

@@ -1,10 +1,9 @@
 var express = require('express')
 var router = express.Router()
 import User from '../controller/user'
-import Admin from '../controller/admin'
 
 router.get('/v1/getUserInfo', User.getUserInfo)
-router.post('/v1/saveMood', User.saveMood)
+router.post('/v1/addMood', User.addMood)
 router.get('/v1/getMood', User.getMood)
 router.post('/v1/addYuan', User.addYuan)
 router.post('/v1/updateYuan', User.updateYuan)

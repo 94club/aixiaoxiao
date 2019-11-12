@@ -13,5 +13,6 @@ router.post('/v1/daySign', User.daySign)
 router.post('/v1/resetBind', User.resetBind)
 router.post('/v1/finishBind', User.finishBind)
 router.get('/v1/getAllUser', User.getAllUser)
+router.post('/v1/getImagePath', User.getImagePath)
 
 module.exports = router

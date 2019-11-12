@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 logs/
 public/uploads
+public/img
 
 # Editor directories and files
 .idea

@@ -5,11 +5,13 @@ import chalk from 'chalk'
 console.log(process.env.NODE_ENV + '--')
 if (process.env.NODE_ENV === 'development') {
   mongoose.connect('mongodb://xiaoai:xiaoai2019@localhost:27017/xiaoai', {
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   })
 } else {
   mongoose.connect('mongodb://xiaoai:xiaoai2019@localhost:27017/xiaoai', {
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   })
 }
 mongoose.Promise = global.Promise

@@ -1,7 +1,9 @@
 import RecordModel from '../models/record'
 import UserModel from '../models/user'
 import dateAndTime from 'date-and-time'
-
+import formidable from 'formidable'
+import fs from 'fs'
+import path from 'path'
 
 export default class Base {
   constructor () {
@@ -52,7 +54,6 @@ export default class Base {
         } else {
           console.log('日志写入成功')
         }
-        console.log(recordText)
       })
     } catch (err) {
       console.log('日志写入catch失败')
@@ -102,4 +103,55 @@ export default class Base {
       })
     }
   }
+
+  async getPath (req, res){
+		return new Promise((resolve, reject) => {
+			const form = formidable.IncomingForm();
+      form.uploadDir = './public/img';
+      // 如果没有就新建
+      if (!fs.existsSync(form.uploadDir)) {
+        fs.mkdirSync(form.uploadDir)
+      }
+			form.parse(req, async (err, fields, files) => {
+        const hashName = (new Date().getTime() + Math.ceil(Math.random()*10000)).toString(16);
+        console.log(fields)
+        console.log(files.file.name)
+				const extname = path.extname(files.file.name);
+				if (!['.jpg', '.jpeg', '.png'].includes(extname)) {
+					fs.unlinkSync(files.file.path);
+					res.send({
+						status: 0,
+						type: 'ERROR_EXTNAME',
+						message: '文件格式错误'
+					})
+					reject('上传失败');
+					return 
+				}
+				const fullName = hashName + extname;
+				const repath = './public/img/' + fullName;
+				try{
+					fs.renameSync(files.file.path, repath);
+					// gm(repath)
+					// .resize(200, 200, "!")
+					// .write(repath, async (err) => {
+					// 	// if(err){
+					// 	// 	console.log('裁切图片失败');
+					// 	// 	reject('裁切图片失败');
+					// 	// 	return
+					// 	// }
+					// 	resolve(fullName)
+          // })
+          resolve('/img/' + fullName)
+				}catch(err){
+					console.log('保存图片失败', err);
+					if (fs.existsSync(repath)) {
+						fs.unlinkSync(repath);
+					} else {
+						fs.unlinkSync(files.file.path);
+					}
+					reject('保存图片失败')
+				}
+			});
+		})
+	}
 }

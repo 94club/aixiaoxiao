@@ -9,6 +9,7 @@ const userSchema = new Schema({
     type: Number,
     default: 1     // 1 没有绑定  2 正在绑定  3完成绑定
   },
+  avatarUrl: String,
   cpName: String, // 绑定对象
   cpWechat: String, // 绑定人wechat
   cpId: Number, // 绑定人的ID

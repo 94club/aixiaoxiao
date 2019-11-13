@@ -81,7 +81,7 @@ export default class Base {
         } else {
           console.log('成功')
           this.addRecord({
-            operator: req.user.username,
+            operator: userInfo.nickName,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
             opertionText: '用户' + userInfo.nickName + '更新了心愿币' + gain
           })

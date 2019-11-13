@@ -962,6 +962,7 @@ class User extends Base{
 
   async getImagePath (req, res) {
     let path = await this.getPath(req, res)
+    res.header("Content-Type", "application/json; charset=utf-8")
     if (path) {
       res.json({
         status: 200,

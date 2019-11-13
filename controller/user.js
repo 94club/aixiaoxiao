@@ -786,7 +786,7 @@ class User extends Base{
 
   async addMood (req, res) {
     let reqInfo = req.body
-    let {des, imageStrList, videoPath, voicePath, userId, nickName} = reqInfo
+    let {des, imageStrList, videoPath, voicePath, userId, nickName, headerImage} = reqInfo
     try {
       if (!des) {
         throw new Error('心情描述不能为空')
@@ -807,6 +807,7 @@ class User extends Base{
       imageStrList,
       videoPath,
       voicePath,
+      headerImage,
       createName: nickName,
       createId: userId,
       createTime: dataTime,

@@ -785,91 +785,78 @@ class User extends Base{
   }
 
   async addMood (req, res) {
-    const form = new formidable.IncomingForm()
-    form.parse(req, async (err, fields, files) => {
-      if (err) {
-				next({
-					status: 0,
-					message: '表单信息错误'
-				}) 
-				return
+    let reqInfo = req.body
+    let {des, imageStrList, videoPath, voicePath, userId, nickName} = reqInfo
+    try {
+      if (!des) {
+        throw new Error('心情描述不能为空')
+      } else if (!userId) {
+        throw new Error('用户id不能为空')
       }
-      console.log(fields)
-      // 必须传图片不然报错
-    })
-
-    // let reqInfo = req.body
-    // let {des, imageStrList, videoPath, voicePath, userId, nickName} = reqInfo
-    // try {
-    //   if (!des) {
-    //     throw new Error('心情描述不能为空')
-    //   } else if (!userId) {
-    //     throw new Error('用户id不能为空')
-    //   }
-    // } catch (err) {
-    //   res.json({
-    //     status: 0,
-    //     message: err.message
-    //   })
-    //   return
-    // }
-    // let moodList = await MoodModel.find({})
-    // let dataTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
-    // let newMood = {
-    //   des,
-    //   imageStrList,
-    //   videoPath,
-    //   voicePath,
-    //   createName: nickName,
-    //   createId: userId,
-    //   createTime: dataTime,
-    //   id: moodList.length + 1
-    // }
-    // try {
-    //   MoodModel.create(newMood, (err, info) => {
-    //     let gain = 0
-    //     if (newMood.des.length > 30) {
-    //       gain += 50
-    //     } else {
-    //       gain += 30
-    //     }
-    //     if (newMood.videoPath) {
-    //       gain += 20
-    //     }
-    //     if (newMood.voicePath) {
-    //       gain += 20
-    //     }
-    //     let sl = newMood.imageStrList.length
-    //     if (sl > 0) {
-    //       gain += (20 * sl)
-    //     }
-    //     if (err) {
-    //       res.json({
-    //         status: 0,
-    //         message: '添加失败,请联系管理员(微信号feng--zao)'
-    //       })
-    //       return
-    //     }
-    //     if (info) {
-    //       res.json({
-    //         status: 200,
-    //         message: '添加成功,收获' + gain + '心愿币'
-    //       })
-    //       this.addYuanMoney(userId, gain)
-    //       // this.addActiveNumber(tokenName, 1)
-    //       this.addRecord({
-    //         operator: nickName,
-    //         createTime: dataTime,
-    //         opertionText: '用户' + nickName + '创建了心情'
-    //       })
-    //     }
-    //   })
-    // } catch (err) {
-    //   res.json({
-    //     status: 0,
-    //     message: '添加失败,请联系管理员(微信号feng--zao)'
-    //   })
-    // }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    let moodList = await MoodModel.find({})
+    let dataTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+    let newMood = {
+      des,
+      imageStrList,
+      videoPath,
+      voicePath,
+      createName: nickName,
+      createId: userId,
+      createTime: dataTime,
+      id: moodList.length + 1
+    }
+    try {
+      MoodModel.create(newMood, (err, info) => {
+        let gain = 0
+        if (newMood.des.length > 30) {
+          gain += 50
+        } else {
+          gain += 30
+        }
+        if (newMood.videoPath) {
+          gain += 20
+        }
+        if (newMood.voicePath) {
+          gain += 20
+        }
+        let sl = newMood.imageStrList.length
+        if (sl > 0) {
+          gain += (20 * sl)
+        }
+        if (err) {
+          res.json({
+            status: 0,
+            message: '添加失败,请联系管理员(微信号feng--zao)'
+          })
+          return
+        }
+        if (info) {
+          res.json({
+            status: 200,
+            message: '添加成功,收获' + gain + '心愿币'
+          })
+          this.addYuanMoney(userId, gain)
+          // this.addActiveNumber(tokenName, 1)
+          this.addRecord({
+            operator: nickName,
+            createTime: dataTime,
+            opertionText: '用户' + nickName + '创建了心情'
+          })
+        }
+      })
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: '添加失败,请联系管理员(微信号feng--zao)'
+      })
+    }
   }
 
   async getMood (req, res) {

@@ -68,10 +68,7 @@ export default class Base {
         throw new Error('金额要大于0')
       }
     } catch (error) {
-      res.json({
-        status: 0,
-        message: err.message
-      })
+      console.log(error)
       return
     }
     let userInfo = await UserModel.findOne({id})
@@ -80,15 +77,9 @@ export default class Base {
         cpMoney: userInfo.cpMoney += gain
       }}, (err) => {
         if (err) {
-          res.json({
-            status: 0,
-            message: '更新失败'
-          })
+          console.log('失败')
         } else {
-          res.json({
-            status: 200,
-            message: '更新成功'
-          })
+          console.log('成功')
           this.addRecord({
             operator: req.user.username,
             createTime: dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss"),
@@ -97,10 +88,7 @@ export default class Base {
         }
       })
     } catch (err) {
-      res.json({
-        status: 0,
-        message: err.message
-      })
+      console.log('失败')
     }
   }
 

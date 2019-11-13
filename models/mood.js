@@ -11,7 +11,7 @@ const moodSchema = new Schema({
   videoPath: String, // 视屏文件
   voicePath: String, // 录音文件
   id: Number,
-  createId: Number,
+  userId: Number,
   createName: String,
   headerImage: String
 })

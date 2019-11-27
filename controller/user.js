@@ -809,7 +809,7 @@ class User extends Base{
       voicePath,
       headerImage,
       createName: nickName,
-      createId: userId,
+      userId,
       createTime: dataTime,
       id: moodList.length + 1
     }
@@ -861,10 +861,12 @@ class User extends Base{
   }
 
   async getMood (req, res) {
-    let {id} = req.query
+    let {userId, pageNo, pageSize} = req.query
     try {
-      if (!id) {
-        throw new Error('id不能为空')
+      if (!pageSize) {
+        throw new Error('pageSize不能为空')
+      } else if (!pageNo) {
+        throw new Error('pageNo不能为空')
       }
     } catch (err) {
       res.json({
@@ -873,7 +875,11 @@ class User extends Base{
       })
       return   
     }
-    let moodList = await MoodModel.find({id}, {'_id': 0, '__v': 0})
+    let filter ={}
+    if (userId) {
+      filter = {userId}
+    }
+    let moodList = await MoodModel.find(filter, {'_id': 0, '__v': 0}).sort({_id: -1}).limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)
     if (moodList) {
       res.json({
         status: 200,

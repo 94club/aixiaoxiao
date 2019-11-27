@@ -12,8 +12,7 @@ const moodSchema = new Schema({
   voicePath: String, // 录音文件
   id: Number,
   createId: Number,
-  createName: String,
-  headerImage: String
+  createName: String
 })
 
 const Mood = mongoose.model('Mood', moodSchema)

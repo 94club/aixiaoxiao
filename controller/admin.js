@@ -186,6 +186,7 @@ class Admin extends Base {
   }
 
   async updateYuan (req, res) {
+    // moneyArr 各自该加多少钱
     let {yuanId, finishedBy, moneyArr, status, operationText} = req.body
     try {
       if (!yuanId) {

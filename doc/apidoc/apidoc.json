@@ -16,7 +16,7 @@
   "basePath": "/apidoc",
   "tags": [
     {
-      "name": "api",
+      "name": "unauth",
       "description": "no authorize action"
     },
     {
@@ -39,13 +39,312 @@
     "application/json"
   ],
   "paths": {
+    "/user/v1/getAllUser": {
+      "get": {
+        "tags": [
+          "unauth"
+        ],
+        "summary": "getAllUser",
+        "description": "获取所有未绑定的用户",
+        "operationId": "getAllUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "用户id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/user/v1/getYuan": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "getYuan",
+        "description": "获取心愿",
+        "operationId": "getYuan",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "心愿状态",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "pageNo",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "pageSize",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "description": "搜索方式",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "搜索关键字",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/user/v1/addMood": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "addMood",
+        "description": "新增心情",
+        "operationId": "addMood",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "yuan object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Mood"
+            }
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/user/v1/getMood": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "getMood",
+        "description": "获取心情",
+        "operationId": "getMood",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "用户id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/user/v1/resetBind": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "resetBind",
+        "description": "重置绑定",
+        "operationId": "resetBind",
+        "parameters": [
+          {
+            "name": "cpId",
+            "in": "body",
+            "description": "对方id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "userId",
+            "in": "body",
+            "description": "用户id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/user/v1/finishBind": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "finishBind",
+        "description": "完成绑定",
+        "operationId": "finishBind",
+        "parameters": [
+          {
+            "name": "nickName",
+            "in": "body",
+            "description": "用户nickName",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cpId",
+            "in": "body",
+            "description": "对方id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "userId",
+            "in": "body",
+            "description": "用户id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/user/v1/getImagePath": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "logout",
+        "description": "",
+        "operationId": "logout",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "用户id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
     "/user/getUserInfo": {
       "get": {
         "tags": [
           "user"
         ],
         "summary": "get userInfo",
-        "description": "获取用户信息",
+        "description": "获取微信用户信息",
         "operationId": "getUserInfo",
         "parameters": [
           {
@@ -68,22 +367,246 @@
         }
       }
     },
-    "/user/getAllUser": {
+    "/admin/v1/getUserInfo": {
       "get": {
         "tags": [
-          "api"
+          "admin"
         ],
-        "summary": "logout",
-        "description": "",
-        "operationId": "logout",
+        "summary": "userInfo",
+        "description": "获取用户信息",
+        "operationId": "userInfo",
         "parameters": [
           {
-            "name": "id",
-            "in": "query",
-            "description": "用户id",
+            "$ref": "#/parameters/userAgent"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/adminLogout": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "adminlogout",
+        "description": "用户退出",
+        "operationId": "adminlogout",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/updateYuan": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "updateYuan",
+        "description": "审核心愿",
+        "operationId": "updateYuan",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          },
+          {
+            "in": "body",
+            "yuanId": "interger",
+            "finishedBy": "interger",
+            "moneyArr": "Array",
+            "status": "interger",
+            "operationText": "string"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/getYuan": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "getYuan",
+        "description": "获取所有心愿",
+        "operationId": "getYuan",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/user/v1/addYuan": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "addYuan",
+        "description": "新增心愿",
+        "operationId": "addYuan",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "yuan object",
             "required": true,
-            "type": "integer",
-            "format": "int32"
+            "schema": {
+              "$ref": "#/definitions/Yuan"
+            }
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/addDaoju": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "addDaoju",
+        "description": "添加道具",
+        "operationId": "addDaoju",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "daoju object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Daoju"
+            }
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/getDaoju": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "getDaoju",
+        "description": "获取所有道具",
+        "operationId": "getDaoju",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/getUser": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "getUser",
+        "description": "获取所有用户",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
           }
         ],
         "responses": {
@@ -125,6 +648,66 @@
       },
       "xml": {
         "name": "User"
+      }
+    },
+    "Yuan": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "interger"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "des": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "interger"
+        }
+      },
+      "xml": {
+        "name": "Yuan"
+      }
+    },
+    "Daoju": {
+      "type": "object",
+      "properties": {
+        "des": {
+          "type": "string"
+        },
+        "money": {
+          "type": "interger"
+        }
+      },
+      "xml": {
+        "name": "Daoju"
+      }
+    },
+    "Mood": {
+      "type": "object",
+      "properties": {
+        "des": {
+          "type": "string"
+        },
+        "imageStrList": {
+          "type": "array"
+        },
+        "videoPath": {
+          "type": "string"
+        },
+        "voicePath": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "interger"
+        },
+        "nickName": {
+          "type": "string"
+        }
+      },
+      "xml": {
+        "name": "Mood"
       }
     }
   },

@@ -78,9 +78,9 @@
         "tags": [
           "unauth"
         ],
-        "summary": "getAllUser",
+        "summary": "wechatLogin",
         "description": "获取所有未绑定的用户",
-        "operationId": "getAllUser",
+        "operationId": "wechatLogin",
         "parameters": [
           {
             "name": "code",
@@ -111,9 +111,9 @@
         "tags": [
           "unauth"
         ],
-        "summary": "getAllUser",
+        "summary": "wechatRegister",
         "description": "获取所有未绑定的用户",
-        "operationId": "getAllUser",
+        "operationId": "wechatRegister",
         "parameters": [
           {
             "name": "code",
@@ -152,14 +152,15 @@
           }
         }
       }
-    },"/user/v1/wechatRegisterName": {
+    },
+    "/user/v1/wechatRegisterName": {
       "post": {
         "tags": [
           "unauth"
         ],
-        "summary": "getAllUser",
+        "summary": "wechatRegisterName",
         "description": "获取所有未绑定的用户",
-        "operationId": "getAllUser",
+        "operationId": "wechatRegisterName",
         "parameters": [
           {
             "name": "cpName",
@@ -322,6 +323,9 @@
         "operationId": "getMood",
         "parameters": [
           {
+            "$ref": "#/parameters/userAgent"
+          },
+          {
             "name": "id",
             "in": "query",
             "description": "用户id",
@@ -355,6 +359,9 @@
         "description": "重置绑定",
         "operationId": "resetBind",
         "parameters": [
+          {
+            "$ref": "#/parameters/userAgent"
+          },
           {
             "name": "cpId",
             "in": "body",
@@ -398,6 +405,9 @@
         "operationId": "finishBind",
         "parameters": [
           {
+            "$ref": "#/parameters/userAgent"
+          },
+          {
             "name": "nickName",
             "in": "body",
             "description": "用户nickName",
@@ -438,21 +448,26 @@
       }
     },
     "/user/v1/getImagePath": {
-      "get": {
+      "post": {
         "tags": [
           "user"
         ],
-        "summary": "logout",
-        "description": "",
-        "operationId": "logout",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "summary": "getImagePath",
+        "description": "上传照片没有formdata",
+        "operationId": "getImagePath",
         "parameters": [
           {
-            "name": "id",
-            "in": "query",
-            "description": "用户id",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
+            "$ref": "#/parameters/userAgent"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "upload image",
+            "require": true,
+            "type": "file"
           }
         ],
         "responses": {
@@ -471,7 +486,7 @@
         }
       }
     },
-    "/user/getUserInfo": {
+    "/user/v1/getUserInfo": {
       "get": {
         "tags": [
           "user"

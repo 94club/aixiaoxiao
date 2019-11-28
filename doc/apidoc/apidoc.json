@@ -73,6 +73,139 @@
         }
       }
     },
+    "/user/v1/wechatLogin": {
+      "post": {
+        "tags": [
+          "unauth"
+        ],
+        "summary": "getAllUser",
+        "description": "获取所有未绑定的用户",
+        "operationId": "getAllUser",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "body",
+            "description": "微信登录code",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/user/v1/wechatRegister": {
+      "post": {
+        "tags": [
+          "unauth"
+        ],
+        "summary": "getAllUser",
+        "description": "获取所有未绑定的用户",
+        "operationId": "getAllUser",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "body",
+            "description": "微信登录code",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nickName",
+            "in": "body",
+            "description": "微信昵称",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "avatarUrl",
+            "in": "body",
+            "description": "微信头像",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },"/user/v1/wechatRegisterName": {
+      "post": {
+        "tags": [
+          "unauth"
+        ],
+        "summary": "getAllUser",
+        "description": "获取所有未绑定的用户",
+        "operationId": "getAllUser",
+        "parameters": [
+          {
+            "name": "cpName",
+            "in": "body",
+            "description": "对方名称",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cpWechat",
+            "in": "body",
+            "description": "对方微信",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cpId",
+            "in": "body",
+            "description": "对方id",
+            "required": true,
+            "type": "interger"
+          },
+          {
+            "name": "userId",
+            "in": "body",
+            "description": "自己id",
+            "required": true,
+            "type": "interger"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
     "/user/v1/getYuan": {
       "get": {
         "tags": [

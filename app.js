@@ -31,7 +31,7 @@ app.all('*', (req, res, next) => {
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 app.use(express.static(path.join(__dirname, 'public')))
 if (process.env.NODE_ENV === 'development' || process.env.SHOW_DOC) {
-  app.use(express.static(path.join('doc')))
+  app.use(express.static(path.join(__dirname,'doc')))
 }
 // 静态服务使用 https://www.cnblogs.com/xiaozhuyuan/p/7207682.html
  

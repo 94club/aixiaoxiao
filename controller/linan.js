@@ -186,14 +186,12 @@ class Admin extends Base {
 
   async updateJob (req, res) {
     // moneyArr 各自该加多少钱
-    let {status, id} = req.body
+    let {id} = req.body
     try {
       if (!id) {
         throw new Error('jobID不能为空')
-      } else if (!status) {
-        throw new Error('状态不能为空')
       }
-    } catch (error) {
+    } catch (err) {
       res.json({
         status: 0,
         message: err.message
@@ -207,7 +205,7 @@ class Admin extends Base {
       //   time: dateTime
       // })
       JobModel.findOneAndUpdate({id}, {$set: {
-        status,
+        status: 2,
         updateTime: dateTime
       }}, (err) => {
         if (err) {

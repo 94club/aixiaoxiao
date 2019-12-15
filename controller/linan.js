@@ -37,7 +37,7 @@ class Admin extends Base {
     let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     if (userInfo) {
       // 用户已存在 去登录
-      redisManager.set(token, username)
+      redisManager.set(token, 'linan')
       res.json({
         status: 200,
         message: '登录成功',
@@ -69,7 +69,7 @@ class Admin extends Base {
             })
           } else {
             if (userInfo) {
-              redisManager.set(token, username)
+              redisManager.set(token, 'linan')
               res.json({
                 status: 200,
                 message: '注册成功',

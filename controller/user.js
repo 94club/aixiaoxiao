@@ -20,6 +20,7 @@ class User extends Base{
     this.getMood = this.getMood.bind(this)
     this.buyDaoju = this.buyDaoju.bind(this)
     this.useDaoju = this.useDaoju.bind(this)
+    this.getDaoju = this.getDaoju.bind(this)
     this.addYuan = this.addYuan.bind(this)
     this.updateYuan = this.updateYuan.bind(this)
     this.getYuan = this.getYuan.bind(this)
@@ -169,6 +170,8 @@ class User extends Base{
       })
       return
     }
+    // 先判断自己的状态  再去更新 TODO
+
     //先把自己isbind更新
     UserModel.findOneAndUpdate({id: cpId}, {$set: {isBind: 2}}, (err, userInfo) => {
       if (err) {
@@ -686,6 +689,20 @@ class User extends Base{
           message: '更新失败,请联系管理员(微信号feng--zao)'
         })
       }
+    }
+  }
+
+  async getDaoju (req, res) {
+    let {ownerId, pageSize, pageNo} = req.query
+    try {
+      if (!ownerId) {
+        throw new Error('用户id不能为空')
+      }
+    } catch (error) {
+      res.json({
+        status: 0,
+        message: error.message
+      })
     }
   }
 

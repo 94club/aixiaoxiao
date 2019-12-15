@@ -9,7 +9,7 @@ const daojuSchema = new Schema({
   isUsed: {
     type: Number,
     default: 1
-  }, // 是否使用1 没有使用  2使用了
+  }, // 是否使用     1 没有使用  2使用了
   usedTime: {
     default: '',
     type: String

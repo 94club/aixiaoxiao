@@ -222,7 +222,7 @@
           {
             "name": "status",
             "in": "query",
-            "description": "心愿状态",
+            "description": "心愿状态1进行中 2待审核 3 完成 ",
             "required": true,
             "type": "integer",
             "format": "int32"
@@ -246,7 +246,7 @@
           {
             "name": "reason",
             "in": "query",
-            "description": "搜索方式",
+            "description": "搜索方式1关键字搜索 2首页获取 3自己获取",
             "required": true,
             "type": "integer",
             "format": "int32"
@@ -526,6 +526,46 @@
         "parameters": [
           {
             "$ref": "#/parameters/userAgent"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "fail operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/adminLogin": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "adminlogin",
+        "description": "用户登录",
+        "operationId": "adminlogin",
+        "parameters": [
+          {
+            "name": "pwd",
+            "in": "body",
+            "description": "用户密码",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "username",
+            "in": "body",
+            "description": "用户账户",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {

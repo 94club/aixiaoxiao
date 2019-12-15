@@ -1,6 +1,7 @@
 import jwtAuth from '../config/checkToken'
 import user from './user'
 import admin from './admin'
+import linan from './linan'
 import unAuth from './unAuth'
 import redisManager from '../config/redis'
 
@@ -10,4 +11,5 @@ export default (app) => {
   app.use(redisManager.refreshToken) // 每一次请求都刷新token的过期时间
   app.use('/user', user)
   app.use('/admin', admin)
+  app.use('/linan', linan)
 }

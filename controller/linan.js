@@ -1,11 +1,7 @@
 import Base from './base';
 
-import DaojuModel from '../models/daoju'
-import NoticeModel from '../models/notice'
-import YuanModel from '../models/yuan'
-import dateAndTime from 'date-and-time'
+import JobModel from '../models/job'
 import AdminModel from '../models/admin'
-import UserModel from '../models/user'
 import constant from '../constant/constant'
 import jsonwebtoken from 'jsonwebtoken'
 import redisManager from '../config/redis'
@@ -13,38 +9,30 @@ import redisManager from '../config/redis'
 class Admin extends Base {
   constructor () {
     super()
-    this.adminLogin = this.adminLogin.bind(this)
-    this.getUserInfo = this.getUserInfo.bind(this)
-    this.updateYuan = this.updateYuan.bind(this)
-    this.getYuan = this.getYuan.bind(this)
-    this.getUser = this.getUser.bind(this)
-    this.addDaoju = this.addDaoju.bind(this)
-    this.getDaoju = this.getDaoju.bind(this)
-    this.startSchedule = this.startSchedule.bind(this)
-    this.addNotice = this.addNotice.bind(this)
-    this.getNotice = this.getNotice.bind(this)
-    this.addAcitivity = this.addAcitivity.bind(this)
-    this.getAcitivity = this.getAcitivity.bind(this)
+    this.login = this.login.bind(this)
+    this.getJob = this.getJob.bind(this)
+    this.addJob = this.addJob.bind(this)
+    this.updateJob = this.updateJob.bind(this)
   }
   
-  async adminLogin (req, res) {
-    let reqInfo = req.body
-    let {username, pwd} = reqInfo
-    try {
-      if (!username) {
-        throw new Error('用户不能为空')
-      }else if (!pwd) {
-        throw new Error('密码不能为空')
-      }
-    } catch (err) {
-      res.json({
-        status: 0,
-        message: err.message
-      })
-      return
-    }
+  async login (req, res) {
+    // let reqInfo = req.body
+    // let {username, pwd} = reqInfo
+    // try {
+    //   if (!username) {
+    //     throw new Error('用户不能为空')
+    //   }else if (!pwd) {
+    //     throw new Error('密码不能为空')
+    //   }
+    // } catch (err) {
+    //   res.json({
+    //     status: 0,
+    //     message: err.message
+    //   })
+    //   return
+    // }
     // 先查一遍看看是否存在
-    let userInfo = await AdminModel.findOne({username, pwd}, {'_id': 0, '__v': 0})
+    let userInfo = await AdminModel.findOne({username: 'linan', pwd: '!qaz123'}, {'_id': 0, '__v': 0})
     let token = jsonwebtoken.sign({username}, constant.secretKey)
     let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     if (userInfo) {
@@ -53,17 +41,22 @@ class Admin extends Base {
       res.json({
         status: 200,
         message: '登录成功',
-        data: {token}
+        data: {
+          token,
+          data: {
+            name: 'linan'
+          }
+        }
       })
-      this.addRecord({
-        operator: username,
-        createTime: dateTime,
-        opertionText: username + '登录成功'
-      })
+      // this.addRecord({
+      //   operator: username,
+      //   createTime: dateTime,
+      //   opertionText: username + '登录成功'
+      // })
     } else {
       let newUser = {
-        username,
-        pwd,
+        username: 'linan',
+        pwd: '!qaz123',
         createTime: dateTime,
         id: 1
       }
@@ -80,13 +73,18 @@ class Admin extends Base {
               res.json({
                 status: 200,
                 message: '注册成功',
-                data: {token}
+                data: {
+                  token,
+                  data: {
+                    name: 'linan'
+                  }
+                }
               })
-              this.addRecord({
-                operator: username,
-                createTime: dateTime,
-                opertionText: '用户' + username + '被创建了'
-              })
+              // this.addRecord({
+              //   operator: username,
+              //   createTime: dateTime,
+              //   opertionText: '用户' + username + '被创建了'
+              // })
             }
           }
         })
@@ -185,18 +183,12 @@ class Admin extends Base {
     }
   }
 
-  async updateYuan (req, res) {
+  async updateJob (req, res) {
     // moneyArr 各自该加多少钱
-    let {yuanId, finishedBy, moneyArr, status, operationText} = req.body
+    let {status, id} = req.body
     try {
-      if (!yuanId) {
-        throw new Error('心愿ID不能为空')
-      } else if (finishedBy.length === 0) {
-        throw new Error('完成人不能为空')
-      } else if (moneyArr.length === 0) {
-        throw new Error('奖金不能为空')
-      } else if (operationText.length === 0) {
-        throw new Error('操作日志不能为空')
+      if (!id) {
+        throw new Error('jobID不能为空')
       } else if (!status) {
         throw new Error('状态不能为空')
       }
@@ -209,14 +201,13 @@ class Admin extends Base {
     }
     let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     try {
-      operationText.push({
-        text: '管理员审核了心愿',
-        time: dateTime
-      })
-      YuanModel.findOneAndUpdate({id: yuanId}, {$set: {
-        status: 4,
-        operationText,
-        checkTime: dateTime
+      // operationText.push({
+      //   text: '管理员审核了心愿',
+      //   time: dateTime
+      // })
+      JobModel.findOneAndUpdate({id}, {$set: {
+        status,
+        updateTime: dateTime
       }}, (err) => {
         if (err) {
           res.json({
@@ -228,13 +219,13 @@ class Admin extends Base {
             status: 200,
             message: '更新成功'
           })
-          this.addRecord({
-            operator: req.user.username,
-            createTime: dateTime,
-            opertionText: '心愿 '+ yuanId +'被审核了'
-          })
-          this.addYuanMoney(finishedBy[0], moneyArr[0])
-          this.addYuanMoney(finishedBy[1], moneyArr[1])
+          // this.addRecord({
+          //   operator: req.user.username,
+          //   createTime: dateTime,
+          //   opertionText: '心愿 '+ yuanId +'被审核了'
+          // })
+          // this.addYuanMoney(finishedBy[0], moneyArr[0])
+          // this.addYuanMoney(finishedBy[1], moneyArr[1])
         }
       })
     } catch (err) {
@@ -301,13 +292,19 @@ class Admin extends Base {
   }
   async addAcitivity (req, res) {}
   async getAcitivity (req, res) {}
-  async addDaoju (req, res) {
-    let {des, money} = req.body
+  async addJob (req, res) {
+    let {require, intro, area, salary, position} = req.body
     try {
-      if (!des) {
-        throw new Error('描述不能为空')
-      } else if (!money) {
-        throw new Error('金额不能为空')
+      if (!require) {
+        throw new Error('职位需求不能为空')
+      } else if (!intro) {
+        throw new Error('职位介绍不能为空')
+      } else if (!area) {
+        throw new Error('工作地点不能为空')
+      } else if (!salary) {
+        throw new Error('薪资不能为空')
+      } else if (!position) {
+        throw new Error('工作岗位不能为空')
       }
     } catch (error) {
       res.json({
@@ -317,15 +314,15 @@ class Admin extends Base {
       return
     }
     let createTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
-    let daojuList = await DaojuModel.find({})
-    let newDaoju = {
+    let jobList = await JobModel.find({})
+    let newJob = {
       createTime,
       money,
-      id: daojuList.length + 1,
+      id: jobList.length + 1,
       des
     }
     try {
-      DaojuModel.create(newDaoju, (err, info) => {
+      JobModel.create(newJob, (err, info) => {
         if (err) {
           res.json({
             status: 0,
@@ -338,11 +335,11 @@ class Admin extends Base {
             status: 200,
             message: '添加成功'
           })
-          this.addRecord({
-            operator: req.user.username,
-            createTime,
-            opertionText: '用户' + req.user.username + '创建了道具'
-          })
+          // this.addRecord({
+          //   operator: req.user.username,
+          //   createTime,
+          //   opertionText: '用户' + req.user.username + '创建了道具'
+          // })
         }
       })
     } catch (err) {
@@ -352,7 +349,7 @@ class Admin extends Base {
       })
     }
   }
-  async getDaoju (req, res) {
+  async getJob (req, res) {
     let {pageSize, pageNo} = req.query
     try {
       if (!pageSize) {
@@ -367,22 +364,22 @@ class Admin extends Base {
       })
       return
     }
-    let daojuList = await DaojuModel.find({}, {'_id': 0, '__v': 0}).sort({_id: -1})
+    let jobList = await JobModel.find({}, {'_id': 0, '__v': 0}).sort({_id: -1})
     // .limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)
-    let list = daojuList.slice((pageNo - 1) * pageSize, pageNo * pageSize)
-    if (daojuList) {
+    let list = jobList.slice((pageNo - 1) * pageSize, pageNo * pageSize)
+    if (jobList) {
       res.json({
         status: 200,
         data: {
-          count: daojuList.length,
+          count: jobList.length,
           list
         },
-        message: '查询道具成功'
+        message: '查询成功'
       })
     } else {
       res.json({
         status: 0,
-        message: '查询道具失败'
+        message: '查询失败'
       })
     }
   }

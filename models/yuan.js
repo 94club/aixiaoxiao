@@ -9,7 +9,7 @@ const yuanSchema = new Schema({
   status: {
     type: Number,
     default: 1
-  }, // 1进行中 2待审核 完成 
+  }, // 1进行中 2待审核 3 完成 
   des: String, // 心愿描述
   createdBy: String, // 创建人
   finishedBy: {

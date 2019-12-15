@@ -350,7 +350,7 @@ class Admin extends Base {
     }
   }
   async getJob (req, res) {
-    let {pageSize, pageNo} = req.query
+    let {pageSize, pageNo, status} = req.query
     try {
       if (!pageSize) {
         throw new Error('pageSize不能为空')
@@ -364,7 +364,7 @@ class Admin extends Base {
       })
       return
     }
-    let jobList = await JobModel.find({}, {'_id': 0, '__v': 0}).sort({_id: -1})
+    let jobList = await JobModel.find({status}, {'_id': 0, '__v': 0}).sort({_id: -1})
     // .limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)
     let list = jobList.slice((pageNo - 1) * pageSize, pageNo * pageSize)
     if (jobList) {

@@ -33,7 +33,7 @@ class Admin extends Base {
     // }
     // 先查一遍看看是否存在
     let userInfo = await AdminModel.findOne({username: 'linan', pwd: '!qaz123'}, {'_id': 0, '__v': 0})
-    let token = jsonwebtoken.sign({username}, constant.secretKey)
+    let token = jsonwebtoken.sign({username: 'linan'}, constant.secretKey)
     let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     if (userInfo) {
       // 用户已存在 去登录

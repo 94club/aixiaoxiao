@@ -317,9 +317,12 @@ class Admin extends Base {
     let jobList = await JobModel.find({})
     let newJob = {
       createTime,
-      money,
       id: jobList.length + 1,
-      des
+      require,
+      intro,
+      area,
+      salary,
+      position
     }
     try {
       JobModel.create(newJob, (err, info) => {

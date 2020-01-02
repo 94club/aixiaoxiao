@@ -55,11 +55,6 @@ class Admin extends Base {
         message: '登录成功',
         data: {token}
       })
-      this.addRecord({
-        operator: username,
-        createTime: dateTime,
-        opertionText: username + '登录成功'
-      })
     } else {
       let newUser = {
         username,
@@ -81,11 +76,6 @@ class Admin extends Base {
                 status: 200,
                 message: '注册成功',
                 data: {token}
-              })
-              this.addRecord({
-                operator: username,
-                createTime: dateTime,
-                opertionText: '用户' + username + '被创建了'
               })
             }
           }

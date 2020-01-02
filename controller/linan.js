@@ -13,27 +13,28 @@ class Admin extends Base {
     this.login = this.login.bind(this)
     this.getJob = this.getJob.bind(this)
     this.addJob = this.addJob.bind(this)
+    this.updateJobView = this.updateJobView.bind(this)
     this.updateJob = this.updateJob.bind(this)
   }
   
   async login (req, res) {
-    // let reqInfo = req.body
-    // let {username, pwd} = reqInfo
-    // try {
-    //   if (!username) {
-    //     throw new Error('用户不能为空')
-    //   }else if (!pwd) {
-    //     throw new Error('密码不能为空')
-    //   }
-    // } catch (err) {
-    //   res.json({
-    //     status: 0,
-    //     message: err.message
-    //   })
-    //   return
-    // }
+    let reqInfo = req.body
+    let {username, pwd} = reqInfo
+    try {
+      if (!username) {
+        throw new Error('用户不能为空')
+      }else if (!pwd) {
+        throw new Error('密码不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
     // 先查一遍看看是否存在
-    let userInfo = await AdminModel.findOne({username: 'linan', pwd: '!qaz123'}, {'_id': 0, '__v': 0})
+    let userInfo = await AdminModel.findOne(reqInfo, {'_id': 0, '__v': 0})
     let token = jsonwebtoken.sign({username: 'linan'}, constant.secretKey)
     let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
     if (userInfo) {
@@ -235,6 +236,45 @@ class Admin extends Base {
     }
   }
 
+  async updateJobView (req, res) {
+    let {id, viewAmount} = req.body
+    try {
+      if (!id) {
+        throw new Error('jobID不能为空')
+      }
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+      return
+    }
+    let dateTime = dateAndTime.format(new Date(), "YYYY/MM/DD HH:mm:ss")
+    try {
+      JobModel.findOneAndUpdate({id}, {$set: {
+        viewAmount: viewAmount++,
+        updateTime: dateTime
+      }}, (err) => {
+        if (err) {
+          res.json({
+            status: 0,
+            message: '更新失败'
+          })
+        } else {
+          res.json({
+            status: 200,
+            message: '更新成功'
+          })
+        }
+      })
+    } catch (err) {
+      res.json({
+        status: 0,
+        message: err.message
+      })
+    }
+  }
+
   async addNotice (req, res) {
     let {des} = req.body
     try {
@@ -321,7 +361,8 @@ class Admin extends Base {
       intro,
       area,
       salary,
-      position
+      position,
+      addPerson: req.user.username
     }
     try {
       JobModel.create(newJob, (err, info) => {
@@ -352,7 +393,7 @@ class Admin extends Base {
     }
   }
   async getJob (req, res) {
-    let {pageSize, pageNo, status} = req.query
+    let {pageSize, pageNo, status, addPerson} = req.query
     try {
       if (!pageSize) {
         throw new Error('pageSize不能为空')
@@ -366,7 +407,18 @@ class Admin extends Base {
       })
       return
     }
-    let jobList = await JobModel.find({status}, {'_id': 0, '__v': 0}).sort({_id: -1})
+    let filter
+    if (addPerson) {
+      filter = {
+        status,
+        addPerson
+      }
+    } else {
+      filter = {
+        status
+      }
+    }
+    let jobList = await JobModel.find(filter, {'_id': 0, '__v': 0}).sort({_id: -1})
     // .limit(parseInt(pageSize)).skip((pageNo - 1) * pageSize)
     let list = jobList.slice((pageNo - 1) * pageSize, pageNo * pageSize)
     if (jobList) {

@@ -16,6 +16,11 @@ const jobSchema = new Schema({
   status: { // 1 发布  2 关闭
     default: 1,
     type: Number
+  },
+  addPerson: String,
+  viewAmount: {
+    type: Number,
+    default: 0
   }
 })
 
